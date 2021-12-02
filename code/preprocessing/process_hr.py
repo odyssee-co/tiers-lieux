@@ -3,7 +3,7 @@ import numpy as np
 import preprocessing.communes as com
 
 
-def process_action_logement(data_path):
+def process_action_logement(data_path, communes):
     # Fichier 1
     df_names = com.get_insee_name(data_path)
     df_conversion = com.get_insee_postal(data_path)
@@ -365,8 +365,35 @@ def process_action_logement(data_path):
                     on="origin_id", how="left"
                     )
 
+
     df13["destination_id"] = 31555
     df13["destination_name"] = "TOULOUSE"  # We don't know destination!
+
+
+    ratio_labege = 0.164
+    ratio_blagnac = 0.254
+    #ratio_colomiers = 0.582
+
+    df_labege = df13.sample(frac=ratio_labege)
+    df13 = df13.drop(df_labege.index)
+    df_labege["destination_id"] = 31254
+    df_labege["destination_name"] = "LABEGE"  # We don't know destination!
+
+    df_blagnac = df13.sample(frac=ratio_blagnac/(1-ratio_labege))
+    df13 = df13.drop(df_blagnac.index)
+    df_blagnac["destination_id"] = 31069
+    df_blagnac["destination_name"] = "BLAGNAC"  # We don't know destination!
+
+    df_colomiers = df13
+    df_colomiers["destination_id"] = 31149
+    df_colomiers["destination_name"] = "COLOMIERS"  # We don't know destination!
+
+    df13 = pd.concat([df_labege, df_blagnac, df_colomiers])
+
+    df13.loc[df13["Ville"] == "LABEGE", "origin_id"] = 31254
+    df13.loc[df13["Ville"] == "LABEGE", "origin_name"] = "LABEGE"
+    df13.loc[df13["Ville"] == "LABEGE", "destination_id"] = 31254
+    df13.loc[df13["Ville"] == "LABEGE", "destination_name"] = "LABEGE"
 
     df13.loc[df13["Ville"] == "BLAGNAC", "origin_id"] = 31069
     df13.loc[df13["Ville"] == "BLAGNAC", "origin_name"] = "BLAGNAC"
@@ -382,7 +409,6 @@ def process_action_logement(data_path):
     df13["file"] = 13
 
     ## Put together
-
     df = pd.concat([
         df1, df2, df3, df4, df5, df6, df7, df8, df10, df11, df12, df13
     ])
@@ -405,19 +431,11 @@ def process_action_logement(data_path):
 
     df_summary = pd.DataFrame.from_records(df_summary)
 
-    df_summary.to_csv(data_path+"/processed/hr_summary.csv", sep=";", index=False)
+    df_summary.to_csv(data_path+"/processed/al_summary.csv", sep=";", index=False)
 
-    df[
-        df["file"] < 13
-    ].dropna().to_csv(data_path+"/processed/od_hr_without_airbus.csv", sep=";", index=False)
+    df.dropna().to_csv(data_path+"/processed/od_al.csv", sep=";", index=False)
+    from IPython import embed; embed()
 
-    df[
-        df["file"] < 1000000
-    ].dropna().to_csv(data_path+"/processed/od_hr_with_airbus.csv", sep=";", index=False)
-
-    df[
-        df["file"] == 13
-    ].dropna().to_csv(data_path+"/processed/od_hr_only_airbus.csv", sep=";", index=False)
     return df
 
 

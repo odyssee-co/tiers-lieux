@@ -8,7 +8,7 @@ def get_communes(data_path):
     df_communes = pd.read_csv(data_path+"/code-postal-code-insee-2015.csv", sep=";")
     df_communes[["x","y"]] = df_communes["Geo Point"].str.split(",", expand=True)
     df_communes = df_communes[["NOM_COM","INSEE_COM", "Code_postal","x","y"]]
-    df_communes = df_communes.drop_duplicates("Code_postal")
+    #df_communes = df_communes.drop_duplicates("Code_postal") #TODO keep biggest pop
     df_communes = df_communes.rename(columns={"NOM_COM": "nom",
         "INSEE_COM": "commune_id", "Code_postal": "postal_id"})
     df_communes.to_csv(data_path+"/processed/communes.csv", index=False)
