@@ -412,7 +412,9 @@ def process_action_logement(data_path, communes):
     df = pd.concat([
         df1, df2, df3, df4, df5, df6, df7, df8, df10, df11, df12, df13
     ])
-
+    df = df.dropna()
+    df["origin_id"] = df["origin_id"].astype(str)
+    df["destination_id"] = df["destination_id"].astype(str)
     df_summary = []
 
     for file in np.arange(1, 14):
@@ -432,10 +434,6 @@ def process_action_logement(data_path, communes):
     df_summary = pd.DataFrame.from_records(df_summary)
 
     df_summary.to_csv(data_path+"/processed/al_summary.csv", sep=";", index=False)
-
-    df.dropna().to_csv(data_path+"/processed/od_al.csv", sep=";", index=False)
-    from IPython import embed; embed()
-
     return df
 
 
@@ -445,9 +443,10 @@ def process_metropole(data_path):
     df_conversion = df_conversion.rename(columns={
         "INSEE_COM": "commune_id", "Code_postal": "postal_id"
     })[["commune_id", "postal_id"]]
-
+    df_conversion["commune_id"] = pd.to_numeric(df_conversion["commune_id"],
+                            errors="coerce", downcast="integer")
     df_conversion = df_conversion.dropna()
-
+    df_conversion["commune_id"] = df_conversion["commune_id"].astype(int)
     df_conversion["commune_id"] = df_conversion["commune_id"].astype(str)
     df_conversion["postal_id"] = df_conversion["postal_id"].astype(int)
     df_conversion["postal_id"] = df_conversion["postal_id"].astype(str)
@@ -474,7 +473,6 @@ def process_metropole(data_path):
     print("Final", len(df))
 
     df = df[["person_id", "origin_id", "destination_id"]]
-    df.to_csv(data_path+"/processed/od_metropole.csv", sep=";", index=False)
     return df
 
 
@@ -492,10 +490,13 @@ def process_region(data_path):
     ))
 
     df["origin_id"] = df["CODE_INSEE"].astype(str)
+    df["origin_id"] = pd.to_numeric(df["origin_id"],
+                            errors="coerce", downcast="integer")
     df["destination_id"] = "31555"
     df["person_id"] = np.arange(len(df))
     df = df[["person_id", "origin_id", "destination_id"]]
-    df.reset_index(drop=True)
     df = df.dropna()
-    df.to_csv(data_path+"/processed/od_region.csv", index=False)
+    df["origin_id"] = df["origin_id"].astype(int)
+    df["origin_id"] = df["origin_id"].astype(str)
+    df.reset_index(drop=True)
     return df

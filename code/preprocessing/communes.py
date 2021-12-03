@@ -1,6 +1,18 @@
 import pandas as pd
 import geopandas
 
+def get_coord(df_persons, communes):
+    communes = communes.drop_duplicates("commune_id")
+    communes = communes[["commune_id", "x", "y"]]
+    df_persons = df_persons.merge(communes.rename(columns={
+                  "commune_id":"origin_id", "x": "origin_x", "y": "origin_y"}),
+                   on="origin_id", how="left")
+    df_persons = df_persons.merge(communes.rename(columns={
+                  "commune_id":"destination_id", "x": "destination_x", "y": "destination_y"}),
+                   on="destination_id", how="left")
+    #df_persons.to_csv(data_path+"/processed/od_al.csv", sep=";", index=False)
+    return df_persons
+
 def get_communes(data_path):
     """
     return dataFrame with communes names, ids, postal codes, and coordinates (x,y)
@@ -11,7 +23,7 @@ def get_communes(data_path):
     #df_communes = df_communes.drop_duplicates("Code_postal") #TODO keep biggest pop
     df_communes = df_communes.rename(columns={"NOM_COM": "nom",
         "INSEE_COM": "commune_id", "Code_postal": "postal_id"})
-    df_communes.to_csv(data_path+"/processed/communes.csv", index=False)
+    df_communes["commune_id"] = df_communes["commune_id"].astype(str)
     return df_communes
 
 def to_gdf(df_communes):
