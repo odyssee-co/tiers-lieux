@@ -2,7 +2,9 @@ import pandas as pd
 import subprocess as sp
 import shutil
 
-def run(df_requests, return_flows=False):
+path = "/home/matt/git/tiers-lieux/"
+
+def run(data_path, jar_file, requests_file, conf_file, return_flows=False):
     """
     df_requests.to_csv("%s/requests.csv" %
                context.path(), sep=";", index=False)
@@ -11,34 +13,23 @@ def run(df_requests, return_flows=False):
     """
 
     command = [
-    shutil.which(context.config("java_path")),
-    "-cp", "%s/%s" % (context.config("data_path"),
-                  context.config("jar_path")),
-    "-Xmx%s" % context.config("java_memory"),
+    shutil.which("java"),
+    "-cp", data_path + jar_file,
+    "-Xmx14G",
     "org.eqasim.odyssee.RunBatchRouting",
-    "--config-path", "%s/%s" % (context.config("data_path"),
-                            context.config("scenario_config_path")),
-    "--input-path", "requests.csv",
-    "--output-path", "results.csv"
+    "--config-path", data_path + conf_file,
+    "--input-path", data_path + requests_file,
+    "--output-path", data_path + "results.csv"
     ]
-
-    travel_times_path = context.config("travel_times_path")
-
-    if not travel_times_path == "undefined":
-        command += [
-        "--update-network-path", "%s/%s" % (
-            context.config("data_path"), travel_times_path),
-        "--minimum-speed", "3.4"
-        ]
 
     if return_flows:
         command += [
         "--flow-output-path", "flows.csv"
         ]
 
-    sp.check_call(command, cwd=context.path())
+    sp.check_call(command, cwd=path)
 
     if not return_flows:
-        return pd.read_csv("%s/results.csv" % context.path(), sep=";")
+        return pd.read_csv("%s/results.csv" % data_path, sep=";")
     else:
-        return pd.read_csv("%s/flows.csv" % context.path(), sep=";")
+        return pd.read_csv("%s/flows.csv" % path, sep=";")
