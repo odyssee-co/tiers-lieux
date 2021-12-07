@@ -1,7 +1,11 @@
-import pandas as pd
 import geopandas as gpd
 
 def get_coord(df_persons, communes):
+    """
+    get origin and destination coordinates
+    df_persons: origin_id, destination_id
+    communes: commune_id, x, y
+    """
     communes = communes.drop_duplicates("commune_id")
     communes = communes[["commune_id", "x", "y"]]
     df_persons = df_persons.merge(communes.rename(columns={
@@ -16,6 +20,7 @@ def get_coord(df_persons, communes):
 def get_communes(data_path):
     """
     return geo dataFrame with communes names, ids, geometry, and coordinates (x,y)
+    df_communes: nom, commune_id, geometry, x, y
     """
     df_communes = gpd.read_file(data_path+"iris/communes-20210101.shp")
     df_communes.geometry = df_communes.geometry.to_crs(2154)

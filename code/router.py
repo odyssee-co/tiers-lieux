@@ -4,7 +4,7 @@ import shutil
 
 path = "/home/matt/git/tiers-lieux/"
 
-def run(data_path, jar_file, requests_file, conf_file, return_flows=False):
+def run(data_path, jar_file, requests_file, conf_file, output_file, return_flows=False):
     """
     df_requests.to_csv("%s/requests.csv" %
                context.path(), sep=";", index=False)
@@ -19,7 +19,7 @@ def run(data_path, jar_file, requests_file, conf_file, return_flows=False):
     "org.eqasim.odyssee.RunBatchRouting",
     "--config-path", data_path + conf_file,
     "--input-path", data_path + requests_file,
-    "--output-path", data_path + "results.csv"
+    "--output-path", data_path + output_file
     ]
 
     if return_flows:
