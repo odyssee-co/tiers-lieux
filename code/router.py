@@ -15,7 +15,7 @@ def run(data_path, jar_file, requests_file, conf_file, output_file, return_flows
     command = [
     shutil.which("java"),
     "-cp", data_path + jar_file,
-    "-Xmx14G",
+    #"-Xmx14G",
     "org.eqasim.odyssee.RunBatchRouting",
     "--config-path", data_path + conf_file,
     "--input-path", data_path + requests_file,
