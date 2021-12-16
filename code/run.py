@@ -5,7 +5,7 @@ import geopandas as gpd
 import numpy as np
 import os
 import router
-
+import optimizer
 
 def compute_initial_requests(data_path):
     if not os.path.isfile("%s/processed/initial_request.csv"%data_path):
@@ -82,9 +82,7 @@ def get_routed_office():
 
 def get_saved_distance():
     routed_inital = get_routed_initial()
-    print(routed_inital)
     routed_offices = get_routed_office()
-    print(routed_offices)
     routed_inital = routed_inital.rename(columns={
         "office_id" : "original_office",
         "car_travel_time" : "baseline_car_travel_time",
@@ -95,7 +93,9 @@ def get_saved_distance():
     df = pd.merge(routed_inital, routed_offices, on="person_id", how="left")
     df["saved_travel_distance"] = df["baseline_car_distance"] - df["car_distance"]
     saved_df = df.pivot(index="person_id", columns="office_id", values="saved_travel_distance")
+    saved_df = saved_df.where(saved_df > 0, 0)
     return saved_df
+
 
 
 if __name__ == "__main__":
@@ -103,3 +103,4 @@ if __name__ == "__main__":
     data_path = "/home/matt/git/tiers-lieux/data/"
     offices_file = "top50.txt"
     saved_df = get_saved_distance()
+    optimizer.brute_force(saved_df)
