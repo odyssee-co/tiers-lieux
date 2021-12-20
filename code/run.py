@@ -103,4 +103,13 @@ if __name__ == "__main__":
     data_path = "/home/matt/git/tiers-lieux/data/"
     offices_file = "top50.txt"
     saved_df = get_saved_distance()
-    optimizer.brute_force(saved_df)
+    #res = optimizer.brute_force(saved_df, 3)
+    print("max saved distance: %s"%optimizer.eval(saved_df))
+    res = optimizer.n_best(saved_df, 10)
+    print(res)
+    res = optimizer.random(saved_df, 10, 3000)
+    print(res)
+    """
+    print("selected offices: %s" %(res[1]))
+    print("average saved distance: %f km" %(2*res[0]/(1000*saved_df.shape[0])))
+    """
