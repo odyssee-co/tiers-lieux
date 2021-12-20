@@ -40,4 +40,20 @@ def random(saved_df, n, nb_it):
         if res > best[0]:
             i = 0
             best = (res, list(sample.columns))
+            print(best)
+    return best
+
+
+def random_weighted(saved_df, n, nb_it):
+    best = n_best(saved_df, n)
+    i = 0
+    w = saved_df.sum()
+    while i < nb_it:
+        i += 1
+        sample = saved_df.sample(10, axis=1, weights = w)
+        res = eval(sample)
+        if res > best[0]:
+            i = 0
+            best = (res, list(sample.columns))
+            print(best)
     return best
