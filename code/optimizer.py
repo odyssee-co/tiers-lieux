@@ -1,5 +1,6 @@
 from itertools import combinations
 from tqdm import tqdm
+import numpy as np
 
 
 def eval(selectedOffices_df):
@@ -47,7 +48,7 @@ def random(saved_df, n, nb_it):
 def random_weighted(saved_df, n, nb_it):
     best = n_best(saved_df, n)
     i = 0
-    w = saved_df.sum()
+    w = np.sqrt(saved_df.sum()) #sqrt to favor novelties
     while i < nb_it:
         i += 1
         sample = saved_df.sample(10, axis=1, weights = w)
@@ -56,4 +57,22 @@ def random_weighted(saved_df, n, nb_it):
             i = 0
             best = (res, list(sample.columns))
             print(best)
+    return best
+
+
+def random_walk(saved_df, n, nb_it):
+    best = n_best(saved_df, n)
+    i = 0
+    sample = saved_df.sample(10, axis=1)
+    while i < nb_it:
+        i += 1
+        res = eval(sample)
+        if res > best[0]:
+            i = 0
+            best = (res, list(sample.columns))
+            print(best)
+        w = sample.idxmax(axis=1).value_counts() #how many times each office is the best choice
+        sample1 = sample.sample(5, axis=1, weights = w) #we keep half with a higher prob for best performing
+        sample2 = saved_df.drop(sample.columns, axis=1).sample(5, axis=1) #we the other half in the remainings
+        sample = sample1.join(sample2)
     return best

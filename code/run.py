@@ -97,7 +97,7 @@ def get_routed_office():
     if not os.path.isfile(routed_offices_path):
         compute_offices_request(data_path)
         router.run(data_path, "/processed/offices_request.csv",
-                "/matsim-conf/toulouse_config.xml", "routed_initial.csv")
+                "/matsim-conf/toulouse_config.xml", "routed_offices.csv")
     return pd.read_csv(routed_offices_path, sep=";")
 
 
@@ -126,6 +126,8 @@ if __name__ == "__main__":
     #res = optimizer.brute_force(saved_df, 3)
     print("max saved distance: %s"%optimizer.eval(saved_df))
     res = optimizer.random_weighted(saved_df, 10, 3000)
+    print()
+    res = optimizer.random_walk(saved_df, 10, 3000)
     """
     print("selected offices: %s" %(res[1]))
     print("average saved distance: %f km" %(2*res[0]/(1000*saved_df.shape[0])))
