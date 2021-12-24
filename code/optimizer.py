@@ -9,6 +9,7 @@ def eval(selectedOffices_df):
     amongst the subset selectedOffices.
     """
     return selectedOffices_df.max(axis=1).sum()
+    
 
 def eval_idx(saved_df, selected_offices_idx):
     """

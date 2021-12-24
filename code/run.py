@@ -1,7 +1,7 @@
 import router
 import optimizer
 import solver
-import sys, os
+import os
 import argparse
 
 
