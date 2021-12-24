@@ -47,7 +47,7 @@ def n_best(saved_df, n):
     return (eval(selectedOffices_df), n_best)
 
 
-def random(saved_df, n, nb_it):
+def random(saved_df, n, nb_it=3000):
     """
     Randomly select a subset of offices, and return the best if nb_it iterations
     passed without improving the result.
@@ -65,7 +65,7 @@ def random(saved_df, n, nb_it):
     return best
 
 
-def random_weighted(saved_df, n, nb_it):
+def random_weighted(saved_df, n, nb_it=3000):
     """
     Randomly select a subset of offices weighted by their individual performances,
     and return the best if nb_it iterations passed without improving the result.
@@ -84,7 +84,7 @@ def random_weighted(saved_df, n, nb_it):
     return best
 
 
-def evolutionary(saved_df, n, ratio, nb_it):
+def evolutionary(saved_df, n, ratio=0.7, nb_it=1000):
     """
     Evolutionary algorithm that keep a ratio of the population weighted by their
     performance in the current subset, and return the best if nb_it iterations
