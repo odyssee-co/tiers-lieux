@@ -3,9 +3,14 @@ import pandas as pd
 import os
 import router
 import optimizer
+import solver
 
 
 def get_routed_initial():
+    """
+    return a dataframe with the travel time for each employee to his original office
+    "office_id", "car_travel_time", "car_distance", "pt_travel_time", "pt_distance"
+    """
     routed_initial_path = "%s/processed/routed_initial.csv"%data_path
     if not os.path.isfile(routed_initial_path):
         req.compute_initial_requests(data_path)
@@ -15,6 +20,10 @@ def get_routed_initial():
 
 
 def get_routed_office():
+    """
+    return a dataframe with the travel time for each employees to each office
+    "office_id", "car_travel_time", "car_distance", "pt_travel_time", "pt_distance"
+    """
     routed_offices_path = "%s/processed/routed_offices.csv"%data_path
     if not os.path.isfile(routed_offices_path):
         req.compute_offices_request(data_path)
@@ -24,6 +33,10 @@ def get_routed_office():
 
 
 def get_saved_distance():
+    """
+    return a dataframe containing for each employee, the time he would save working
+    in each office (0 if the saved time if negative)
+    """
     routed_inital = get_routed_initial()
     routed_offices = get_routed_office()
     routed_inital = routed_inital.rename(columns={
@@ -42,15 +55,15 @@ def get_saved_distance():
 
 if __name__ == "__main__":
     #from IPython import embed; embed()
-    nb_offices = 10
+    nb_offices = 3
     data_path = "/home/matt/git/tiers-lieux/data/"
     #offices_file = "top50.txt"
     saved_df = get_saved_distance()
     #res = optimizer.brute_force(saved_df, nb_offices)
-    print("max saved distance: %s"%optimizer.eval(saved_df))
+    #print("max saved distance: %s"%optimizer.eval(saved_df))
     #res = optimizer.random_weighted(saved_df, nb_offices, 3000)
-    print()
-    res = optimizer.evolutionary(saved_df, nb_offices, 0.7, 1000)
+    #res = optimizer.evolutionary(saved_df, nb_offices, 0.7, 1000)
+    solver.solve(saved_df, nb_offices)
     """
     print("selected offices: %s" %(res[1]))
     print("average saved distance: %f km" %(2*res[0]/(1000*saved_df.shape[0])))

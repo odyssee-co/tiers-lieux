@@ -4,9 +4,17 @@ import numpy as np
 
 
 def eval(selectedOffices_df):
+    """
+    Return the total saved distance if each employee chose the closest office
+    amongst the subset selectedOffices.
+    """
     return selectedOffices_df.max(axis=1).sum()
 
 def eval_idx(saved_df, selected_offices_idx):
+    """
+    Return the total saved distance if each employee chose the closest office
+    amongst the ones given as a list of index selected_offices_idx.
+    """
     selectedOffices_df = saved_df.iloc[:, selected_offices_idx]
     return eval(selectedOffices_df)
 
@@ -30,12 +38,20 @@ def brute_force(saved_df, n):
 
 
 def n_best(saved_df, n):
+    """
+    Return the n offices which would save the most travel time individualy
+    (useful to get a lower bound to the optimization problem).
+    """
     n_best = list(saved_df.sum().sort_values(ascending=False).iloc[0:n].index)
     selectedOffices_df = saved_df.loc[:, n_best]
     return (eval(selectedOffices_df), n_best)
 
 
 def random(saved_df, n, nb_it):
+    """
+    Randomly select a subset of offices, and return the best if nb_it iterations
+    passed without improving the result.
+    """
     best = n_best(saved_df, n)
     i = 0
     while i < nb_it:
@@ -50,6 +66,10 @@ def random(saved_df, n, nb_it):
 
 
 def random_weighted(saved_df, n, nb_it):
+    """
+    Randomly select a subset of offices weighted by their individual performances,
+    and return the best if nb_it iterations passed without improving the result.
+    """
     best = n_best(saved_df, n)
     i = 0
     w = np.sqrt(saved_df.sum()) #weight is the total distance a single office would saved; sqrt to favor novelties
@@ -65,6 +85,11 @@ def random_weighted(saved_df, n, nb_it):
 
 
 def evolutionary(saved_df, n, ratio, nb_it):
+    """
+    Evolutionary algorithm that keep a ratio of the population weighted by their
+    performance in the current subset, and return the best if nb_it iterations
+    passed without improving the result.
+    """
     best = n_best(saved_df, n)
     i = 0
     sample = saved_df.sample(n, axis=1)

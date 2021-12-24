@@ -6,6 +6,11 @@ import numpy as np
 import os
 
 def compute_initial_requests(data_path):
+    """
+    Call the preprocessing procedures to compute the population, and create the
+    csv file needed to run the router to calculate the travel distance for each
+    employee to go to his office.
+    """
     if not os.path.isfile("%s/processed/initial_request.csv"%data_path):
         print("Computing initial request...")
         communes_df = com.get_communes(data_path)
@@ -36,8 +41,8 @@ def compute_initial_requests(data_path):
 
 def get_top_50_offices(data_path):
     """
-    return the top 50 communes in midi-pyrénnées with the most inhabitants
-    leaving every days to go to work in another communes
+    Return the top 50 communes in midi-pyrénnées with the most inhabitants
+    leaving every days to go to work in another communes.
     """
     persons_df = pd.read_csv(data_path+"/processed/persons.csv")
     persons_df = persons_df[persons_df["origin_id"].str[0:2].isin(
@@ -49,6 +54,10 @@ def get_top_50_offices(data_path):
 
 
 def compute_offices_request(data_path, offices_file=None):
+    """
+    Create the csv file needed to run the router to calculate the travel distance
+    for each employee to go to each office.
+    """
     if not os.path.isfile("%s/processed/offices_request.csv"%data_path):
         print("Computing offices request...")
         persons_df = pd.read_csv(data_path+"/processed/initial_request.csv", sep=";")

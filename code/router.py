@@ -6,9 +6,7 @@ jar_file = "flow-1.2.0.jar"
 
 def run(data_path, requests_file, conf_file, output_file, return_flows=False):
     """
-    df_requests.to_csv("%s/requests.csv" %
-               context.path(), sep=";", index=False)
-    read df_requests from csv
+    read df_requests from csv and call MATSim router
     person_id;office_id;origin_x;origin_y;destination_x;destination_y
     """
 
