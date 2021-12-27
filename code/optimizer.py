@@ -25,7 +25,7 @@ def exhaustive(saved_df, n, verbose):
     """
     Enumerate all the possible combinations of selecting n offices amongst the
     ones in saved_df (matrix of distance saved by each user if they go to work
-    in each offices and return the best combination in term of overall saved
+    in each offices) and return the best combination in term of overall saved
     distance.
     """
     nb_offices = saved_df.shape[1]
