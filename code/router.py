@@ -67,17 +67,22 @@ class Router:
         return a dataframe containing for each employee, the time he would save working
         in each office (0 if the saved time if negative)
         """
-        routed_inital = self.get_routed_initial()
-        routed_offices = self.get_routed_office()
-        routed_inital = routed_inital.rename(columns={
-            "office_id" : "original_office",
-            "car_travel_time" : "baseline_car_travel_time",
-            "car_distance" : "baseline_car_distance",
-            "pt_travel_time" : "baseline_pt_travel_time",
-            "pt_distance" : "baseline_pt_distance",
-        })
-        df = pd.merge(routed_inital, routed_offices, on="person_id", how="left")
-        df["saved_travel_distance"] = df["baseline_car_distance"] - df["car_distance"]
-        saved_df = df.pivot(index="person_id", columns="office_id", values="saved_travel_distance")
-        saved_df = saved_df.where(saved_df > 0, 0)
+        saved_path = "%s/processed/saved.csv"%self.data_path
+        if os.path.isfile(saved_path):
+            saved_df = pd.read_csv(saved_path)
+        else:
+            routed_inital = self.get_routed_initial()
+            routed_offices = self.get_routed_office()
+            routed_inital = routed_inital.rename(columns={
+                "office_id" : "original_office",
+                "car_travel_time" : "baseline_car_travel_time",
+                "car_distance" : "baseline_car_distance",
+                "pt_travel_time" : "baseline_pt_travel_time",
+                "pt_distance" : "baseline_pt_distance",
+            })
+            df = pd.merge(routed_inital, routed_offices, on="person_id", how="left")
+            df["saved_travel_distance"] = df["baseline_car_distance"] - df["car_distance"]
+            saved_df = df.pivot(index="person_id", columns="office_id", values="saved_travel_distance")
+            saved_df = saved_df.where(saved_df > 0, 0)
+            saved_df.to_csv(saved_path, index=False)
         return saved_df

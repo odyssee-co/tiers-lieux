@@ -6,15 +6,19 @@ import argparse
 
 if __name__ == "__main__":
     #from IPython import embed; embed()
-    parser = argparse.ArgumentParser(description='Run the optimizer')
-    parser.add_argument('data_path', help='path to the data')
-    parser.add_argument('--nb_offices', "-n", type=int, default=10,
-                        help='number of offices')
-    parser.add_argument('--verbose', "-v", action="store_true", help='verbose mode')
+    parser = argparse.ArgumentParser(description="Run the optimizer")
+    parser.add_argument("--data_path", default="../data", help="path to the data")
+    parser.add_argument("--nb_offices", "-n", type=int, default=10,
+                        help="number of offices")
+    parser.add_argument("--verbose", "-v", action="store_true", help="verbose mode")
+    parser.add_argument("--sample", "-s", type=float, default=1, help="sample rate")
+    parser.add_argument("--solver", default="cbc", help="chose the mip solver")
     args=parser.parse_args()
     data_path = args.data_path
     nb_offices = args.nb_offices
     verbose = args.verbose
+    solver = args.solver
+    sample_rate = args.sample
 
     processed_path = data_path+"/processed"
     if not os.path.isdir(processed_path):
@@ -22,18 +26,22 @@ if __name__ == "__main__":
 
     r = router.Router(data_path)
     saved_df = r.get_saved_distance()
-    saved_df = saved_df.iloc[:500,:]
-    print("max saved distance: %s\n"%optimizer.eval(saved_df)) #upper bound when all offices are available
+    if sample_rate < 1:
+        saved_df = saved_df.sample(round(saved_df.shape[0]*sample_rate))
+
+    max = 2*optimizer.eval(saved_df)/(1000*saved_df.shape[0]) #upper bound when all offices are available
+    print("nb employee: %s"%saved_df.shape[0])
+    print("max saved distance per day and per employee: %.2f km\n"%max)
     #res = optimizer.exhaustive(saved_df, nb_offices)
 
     print("Running evolutionary heuristic...")
     res = optimizer.evolutionary(saved_df, nb_offices, verbose)
     average = 2*res[0]/(1000*saved_df.shape[0])
     print("selected offices: %s" %(res[1]))
-    print("average saved distance per day and per employee: %f km\n"%average)
+    print("average saved distance per day and per employee: %.2f km\n"%average)
 
     print("Running MIP solver...")
-    res = optimizer.mip(saved_df, nb_offices)
+    res = optimizer.mip(saved_df, nb_offices, solver=solver)
     average = 2*res[0]/(1000*saved_df.shape[0])
     print("selected offices: %s" %(res[1]))
-    print("average saved distance per day and per employee: %f km\n"%average)
+    print("average saved distance per day and per employee: %.2f km\n"%average)

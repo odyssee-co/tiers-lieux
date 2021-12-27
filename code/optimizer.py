@@ -114,7 +114,7 @@ def evolutionary(saved_df, n, verbose, ratio=0.7, nb_it=1000):
     return best
 
 
-def mip(saved_df, nb_offices):
+def mip(saved_df, nb_offices, solver="glpk"):
     """
     MIP modelization in pyomo
     """
@@ -141,9 +141,9 @@ def mip(saved_df, nb_offices):
     #nb_offices offices are selected
     model.num_facilities = pyo.Constraint(expr=sum(model.y[o] for o in model.offices)==nb_offices)
 
-    solver = pyo.SolverFactory('glpk') #glpk is not multithreaded
-    #solver = SolverFactory("cbc", options={"threads": 4}) # cbc needs to be compiled multi-threaded
-    solver.solve(model)
+    instance = pyo.SolverFactory(solver) #glpk is not multithreaded
+    #instance = SolverFactory("cbc", options={"threads": 4}) # cbc needs to be compiled multi-threaded
+    instance.solve(model)
 
     selected_communes = np.array([pyo.value(v)==1 for v in model.y.values()])
     return (pyo.value(model.obj), list(saved_df.columns[selected_communes]))
