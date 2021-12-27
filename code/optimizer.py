@@ -9,7 +9,7 @@ def eval(selectedOffices_df):
     amongst the subset selectedOffices.
     """
     return selectedOffices_df.max(axis=1).sum()
-    
+
 
 def eval_idx(saved_df, selected_offices_idx):
     """
@@ -20,7 +20,7 @@ def eval_idx(saved_df, selected_offices_idx):
     return eval(selectedOffices_df)
 
 
-def brute_force(saved_df, n):
+def exhaustive(saved_df, n):
     """
     Enumerate all the possible combinations of selecting n offices amongst the
     ones in saved_df (matrix of distance saved by each user if they go to work
