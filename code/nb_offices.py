@@ -1,6 +1,7 @@
 import router
 import argparse
 import optimizer
+from matplotlib import pyplot
 
 if __name__ == "__main__":
 
@@ -22,3 +23,7 @@ if __name__ == "__main__":
     with open(output_path, "w") as f:
         for e in out:
             f.write(str(e)+"\n")
+    pyplot.plot(range(2, len(out)+2),out)
+    pyplot.xlabel('nb_tierslieux')
+    pyplot.ylabel('saved_distance_per_employee_per_day (km)')
+    pyplot.show() 

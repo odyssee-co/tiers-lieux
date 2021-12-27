@@ -1,7 +1,7 @@
-from pyomo.environ import ConcreteModel, Var, Binary, Objective, ConstraintList, Constraint, SolverFactory
+from pyomo.environ import ConcreteModel, Var, Binary, Objective, ConstraintList, Constraint, SolverFactory, maximize
 
 def solve(saved_df, nb_offices):
-    saved_df = saved_df.iloc[:500,:15]
+    #saved_df = saved_df.iloc[:500,:15]
     model = ConcreteModel()
     model.offices = range(saved_df.shape[1])
     model.employees = range(saved_df.shape[0])
@@ -10,7 +10,7 @@ def solve(saved_df, nb_offices):
     model.y = Var(model.offices, within=Binary)
 
     model.obj = Objective(expr=sum(saved_df.iloc[e,o]*model.x[e,o]
-        for o in model.offices for e in model.employees))
+        for o in model.offices for e in model.employees), sense=maximize)
 
     #all employees chose exactly one office
     model.single_x = ConstraintList()
