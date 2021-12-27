@@ -1,11 +1,10 @@
-from pyomo.environ import ConcreteModel, Var, Binary, Objective, ConstraintList, Constraint, SolverFactory, maximize
+from pyomo.environ import ConcreteModel, Var, Binary, Objective, ConstraintList, Constraint, SolverFactory, maximize, value
+from numpy import array
 
 def solve(saved_df, nb_offices):
-    #saved_df = saved_df.iloc[:500,:15]
     model = ConcreteModel()
     model.offices = range(saved_df.shape[1])
     model.employees = range(saved_df.shape[0])
-    #model.x = Var(model.employees, model.offices, bounds=(0.0,1.0) )
     model.x = Var(model.employees, model.offices, within=Binary)
     model.y = Var(model.offices, within=Binary)
 
@@ -28,6 +27,7 @@ def solve(saved_df, nb_offices):
 
     solver = SolverFactory('glpk') #glpk is not multithreaded
     #solver = SolverFactory("cbc", options={"threads": 4}) # cbc needs to be compiled multi-threaded
-    print("Running solver...")
-    res = solver.solve(model)
-    print(res)
+    solver.solve(model)
+
+    selected_communes = array([value(v)==1 for v in model.y.values()])
+    return (value(model.obj), list(saved_df.columns[selected_communes]))

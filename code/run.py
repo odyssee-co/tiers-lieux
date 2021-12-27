@@ -21,12 +21,17 @@ if __name__ == "__main__":
 
     r = router.Router(data_path)
     saved_df = r.get_saved_distance()
-    print("max saved distance: %s"%optimizer.eval(saved_df)) #upper bound when all offices are available
+    #saved_df = saved_df.iloc[:500,:]
+    print("max saved distance: %s\n"%optimizer.eval(saved_df)) #upper bound when all offices are available
+    #res = optimizer.exhaustive(saved_df, nb_offices)
 
-    #res = optimizer.brute_force(saved_df, nb_offices)
-    solver.solve(saved_df, nb_offices)
-    #res = optimizer.random_weighted(saved_df, nb_offices)
+    print("Running evolutionary heuristic...")
     res = optimizer.evolutionary(saved_df, nb_offices)
     average = 2*res[0]/(1000*saved_df.shape[0])
     print("selected offices: %s" %(res[1]))
-    print("average saved distance per day and per employee: %f km"%average)
+    print("average saved distance per day and per employee: %f km\n"%average)
+
+    print("Running solver...")
+    res = solver.solve(saved_df, nb_offices)
+    print(res)
+    print()
