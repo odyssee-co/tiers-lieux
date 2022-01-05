@@ -46,7 +46,8 @@ def get_top_50_offices(data_path):
     """
     persons_df = pd.read_csv(data_path+"/processed/persons.csv")
     persons_df = persons_df[persons_df["origin_id"].str[0:2].isin(
-                             ["09", "12", "31", "32", "46", "65", "81", "82"])]
+                             #["09", "12", "31", "32", "46", "65", "81", "82"])]
+                             ["09", "11", "31", "32", "81", "82"])]
     persons_df = persons_df[persons_df["origin_id"].astype(str)
                                     != persons_df["destination_id"].astype(str)]
     top_50 = list(persons_df["origin_id"].value_counts()[0:50].index)
