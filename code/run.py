@@ -2,6 +2,7 @@ import router
 import optimizer
 import os
 import argparse
+import visualization
 
 
 if __name__ == "__main__":
@@ -12,13 +13,15 @@ if __name__ == "__main__":
                         help="number of offices")
     parser.add_argument("--verbose", "-v", action="store_true", help="verbose mode")
     parser.add_argument("--sample", "-s", type=float, default=1, help="sample rate")
-    parser.add_argument("--solver", default="cbc", help="chose the mip solver")
+    parser.add_argument("--solver", type=str, help="use mip solver (glpk|cbc)")
+    parser.add_argument("--show", action="store_true", help="show the data")
     args=parser.parse_args()
     data_path = args.data_path
     nb_offices = args.nb_offices
     verbose = args.verbose
     solver = args.solver
     sample_rate = args.sample
+    solver = args.solver
 
     processed_path = data_path+"/processed"
     if not os.path.isdir(processed_path):
@@ -40,8 +43,12 @@ if __name__ == "__main__":
     print("selected offices: %s" %(res[1]))
     print("average saved distance per day and per employee: %.2f km\n"%average)
 
-    print("Running MIP solver...")
-    res = optimizer.mip(saved_df, nb_offices, solver=solver)
-    average = 2*res[0]/(1000*saved_df.shape[0])
-    print("selected offices: %s" %(res[1]))
-    print("average saved distance per day and per employee: %.2f km\n"%average)
+    if solver:
+        print("Running MIP solver...")
+        res = optimizer.mip(saved_df, nb_offices, solver=solver)
+        average = 2*res[0]/(1000*saved_df.shape[0])
+        print("selected offices: %s" %(res[1]))
+        print("average saved distance per day and per employee: %.2f km\n"%average)
+
+    if args.show:
+        visualization.viz(res)
