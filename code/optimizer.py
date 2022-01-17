@@ -141,7 +141,10 @@ def mip(saved_df, nb_offices, solver="glpk"):
     #nb_offices offices are selected
     model.num_facilities = pyo.Constraint(expr=sum(model.y[o] for o in model.offices)==nb_offices)
 
-    instance = pyo.SolverFactory(solver, options={"threads": 4}) 
+    if solver == "cbc":
+        instance = pyo.SolverFactory(solver, options={"threads": 4})
+    else:
+        instance = pyo.SolverFactory(solver)
     #instance = SolverFactory("cbc", options={"threads": 4}) # cbc needs to be compiled multi-threaded
     instance.solve(model)
 
