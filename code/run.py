@@ -15,6 +15,7 @@ if __name__ == "__main__":
     parser.add_argument("--sample", "-s", type=float, default=1, help="sample rate")
     parser.add_argument("--solver", type=str, help="use mip solver (glpk|cbc)")
     parser.add_argument("--show", action="store_true", help="show the data")
+    parser.add_argument("--heuristic", type=str, help="use heuristic search (rand, rand_w, evol)")
     args=parser.parse_args()
     data_path = args.data_path
     nb_offices = args.nb_offices
@@ -22,6 +23,7 @@ if __name__ == "__main__":
     solver = args.solver
     sample_rate = args.sample
     solver = args.solver
+
 
     processed_path = data_path+"/processed"
     if not os.path.isdir(processed_path):
@@ -37,11 +39,14 @@ if __name__ == "__main__":
     print("max saved distance per day and per employee: %.2f km\n"%max)
     #res = optimizer.exhaustive(saved_df, nb_offices)
 
-    print("Running evolutionary heuristic...")
-    res = optimizer.evolutionary(saved_df, nb_offices, verbose)
-    average = 2*res[0]/(1000*saved_df.shape[0])
-    print("selected offices: %s" %(res[1]))
-    print("average saved distance per day and per employee: %.2f km\n"%average)
+    if args.heuristic:
+        heuristic_dic = {"rand":"random", "rand_w":"random_weighted", "evol":"evolutionary"}
+        heuristic = getattr(optimizer, heuristic_dic[args.heuristic])
+        print("Running %s heuristic..."%heuristic_dic[args.heuristic])
+        res = heuristic(saved_df, nb_offices, verbose)
+        average = 2*res[0]/(1000*saved_df.shape[0])
+        print("selected offices: %s" %(res[1]))
+        print("average saved distance per day and per employee: %.2f km\n"%average)
 
     if solver:
         print("Running MIP solver...")

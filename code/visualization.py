@@ -1,7 +1,6 @@
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import pandas as pd
-import geoplot as gplt
 
 def viz(res):
     departments = ["09", "82", "81", "11", "31", "32"]
@@ -40,6 +39,7 @@ def viz(res):
     plt.show()
     #df.to_file("data/departments.gpkg", driver = "GPKG")
 
+"""
 res = (462489137.66859215,
  ['31555',
   '31160',
@@ -52,3 +52,4 @@ res = (462489137.66859215,
   '31374',
   '31395'])
 viz(res)
+"""
