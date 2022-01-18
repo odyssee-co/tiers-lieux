@@ -102,10 +102,11 @@ class Router:
         return pd.read_csv(routed_offices_path, sep=";")
 
 
-    def get_saved_distance(self, use_modal_share=True):
+    def get_saved_distance(self, use_modal_share=True, min_radius=15000):
         """
-        return a dataframe containing for each employee, the time he would save working
-        in each office (0 if the saved time if negative)
+        Return a dataframe containing for each employee, the time he would save working
+        in each office (0 if the saved time if negative or inferior to min_radius).
+
         """
         saved_path = "%s/processed/saved.csv"%self.data_path
         if os.path.isfile(saved_path):
@@ -148,6 +149,6 @@ class Router:
 
             df["saved_travel_distance"] = df["baseline_car_distance"] - df["car_distance"]
             saved_df = df.pivot(index="person_id", columns="office_id", values="saved_travel_distance")
-            saved_df = saved_df.where(saved_df > 0, 0)
+            saved_df = saved_df.where(saved_df > min_radius, 0)
             saved_df.to_csv(saved_path, index=False)
         return saved_df
