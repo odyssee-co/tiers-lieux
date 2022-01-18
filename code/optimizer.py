@@ -21,7 +21,7 @@ def eval_idx(saved_df, selected_offices_idx):
     return eval(selectedOffices_df)
 
 
-def exhaustive(saved_df, n, verbose):
+def exhaustive(saved_df, n, verbose=False):
     """
     Enumerate all the possible combinations of selecting n offices amongst the
     ones in saved_df (matrix of distance saved by each user if they go to work
@@ -50,7 +50,7 @@ def n_best(saved_df, n):
     return (eval(selectedOffices_df), n_best)
 
 
-def random(saved_df, n, verbose, nb_it=3000):
+def random(saved_df, n, verbose=False, nb_it=3000):
     """
     Randomly select a subset of offices, and return the best if nb_it iterations
     passed without improving the result.
@@ -69,7 +69,7 @@ def random(saved_df, n, verbose, nb_it=3000):
     return best
 
 
-def random_weighted(saved_df, n, verbose, nb_it=3000):
+def random_weighted(saved_df, n, verbose=False, nb_it=3000):
     """
     Randomly select a subset of offices weighted by their individual performances,
     and return the best if nb_it iterations passed without improving the result.
@@ -89,7 +89,7 @@ def random_weighted(saved_df, n, verbose, nb_it=3000):
     return best
 
 
-def evolutionary(saved_df, n, verbose, ratio=0.7, nb_it=1000):
+def evolutionary(saved_df, n, verbose=False, ratio=0.7, nb_it=1000):
     """
     Evolutionary algorithm that keep a ratio of the population weighted by their
     performance in the current subset, and return the best if nb_it iterations
@@ -114,7 +114,7 @@ def evolutionary(saved_df, n, verbose, ratio=0.7, nb_it=1000):
     return best
 
 
-def mip(saved_df, nb_offices, solver="glpk"):
+def mip(saved_df, nb_offices, solver="glpk", verbose=False):
     """
     MIP modelization in pyomo
     """
@@ -149,4 +149,7 @@ def mip(saved_df, nb_offices, solver="glpk"):
     instance.solve(model)
 
     selected_communes = np.array([pyo.value(v)==1 for v in model.y.values()])
-    return (pyo.value(model.obj), list(saved_df.columns[selected_communes]))
+    res = (pyo.value(model.obj), list(saved_df.columns[selected_communes]))
+    if verbose:
+        print(res)
+    return res
