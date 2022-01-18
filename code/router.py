@@ -146,4 +146,5 @@ class Router:
         df["saved_travel_distance"] = df["baseline_car_distance"] - df["car_distance"]
         saved_df = df.pivot(index="person_id", columns="office_id", values="saved_travel_distance")
         saved_df = saved_df.where(saved_df > min_saved, 0)
+        saved_df.columns = saved_df.columns.astype(str)
         return saved_df
