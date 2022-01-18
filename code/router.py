@@ -102,53 +102,48 @@ class Router:
         return pd.read_csv(routed_offices_path, sep=";")
 
 
-    def get_saved_distance(self, use_modal_share=True, min_saved=15000):
+    def get_saved_distance(self, use_modal_share=False, min_saved=10000):
         """
         Return a dataframe containing for each employee, the time he would save working
         in each office (0 if the saved time if negative or inferior to min_saved).
 
         """
-        saved_path = "%s/processed/saved.csv"%self.data_path
-        if os.path.isfile(saved_path):
-            saved_df = pd.read_csv(saved_path)
-        else:
-            routed_inital = self.get_routed_initial()
-            routed_offices = self.get_routed_office()
-            routed_inital = routed_inital.rename(columns={
-                "office_id" : "original_office",
-                "car_travel_time" : "baseline_car_travel_time",
-                "car_distance" : "baseline_car_distance",
-                "pt_travel_time" : "baseline_pt_travel_time",
-                "pt_distance" : "baseline_pt_distance",
-            })
-            df = pd.merge(routed_inital, routed_offices, on="person_id", how="left")
+        routed_inital = self.get_routed_initial()
+        routed_offices = self.get_routed_office()
+        routed_inital = routed_inital.rename(columns={
+            "office_id" : "original_office",
+            "car_travel_time" : "baseline_car_travel_time",
+            "car_distance" : "baseline_car_distance",
+            "pt_travel_time" : "baseline_pt_travel_time",
+            "pt_distance" : "baseline_pt_distance",
+        })
+        df = pd.merge(routed_inital, routed_offices, on="person_id", how="left")
 
-            if use_modal_share:
-                #We weight the car distance by the modal shares
-                persons_path = self.data_path+"/processed/persons.csv"
-                persons_df = pd.read_csv(persons_path)[["person_id", "origin_id"]]
-                df = pd.merge(df, persons_df, on="person_id", how="left")
-                df["origin_id"] = df["origin_id"].astype("str")
-                df["original_office"] = df["original_office"].astype("str")
-                df["office_id"] = df["office_id"].astype("str")
-                modal_shares = od_shares(self.data_path)
-                df = pd.merge(df, modal_shares.rename(
-                              columns={
-                              "destination_id":"original_office",
-                              "share_car":"share_car_orig"}),
-                              on=["origin_id", "original_office"],
-                              how="left")
-                df = pd.merge(df, modal_shares.rename(
-                              columns={
-                              "destination_id":"office_id",
-                              "share_car":"share_car_new"}),
-                              on=["origin_id", "office_id"],
-                              how="left")
-                df["baseline_car_distance"] *= df["share_car_orig"]
-                df["car_distance"] *= df["share_car_new"]
+        if use_modal_share:
+            #We weight the car distance by the modal shares
+            persons_path = self.data_path+"/processed/persons.csv"
+            persons_df = pd.read_csv(persons_path)[["person_id", "origin_id"]]
+            df = pd.merge(df, persons_df, on="person_id", how="left")
+            df["origin_id"] = df["origin_id"].astype("str")
+            df["original_office"] = df["original_office"].astype("str")
+            df["office_id"] = df["office_id"].astype("str")
+            modal_shares = od_shares(self.data_path)
+            df = pd.merge(df, modal_shares.rename(
+                          columns={
+                          "destination_id":"original_office",
+                          "share_car":"share_car_orig"}),
+                          on=["origin_id", "original_office"],
+                          how="left")
+            df = pd.merge(df, modal_shares.rename(
+                          columns={
+                          "destination_id":"office_id",
+                          "share_car":"share_car_new"}),
+                          on=["origin_id", "office_id"],
+                          how="left")
+            df["baseline_car_distance"] *= df["share_car_orig"]
+            df["car_distance"] *= df["share_car_new"]
 
-            df["saved_travel_distance"] = df["baseline_car_distance"] - df["car_distance"]
-            saved_df = df.pivot(index="person_id", columns="office_id", values="saved_travel_distance")
-            saved_df = saved_df.where(saved_df > min_radius, 0)
-            saved_df.to_csv(saved_path, index=False)
+        df["saved_travel_distance"] = df["baseline_car_distance"] - df["car_distance"]
+        saved_df = df.pivot(index="person_id", columns="office_id", values="saved_travel_distance")
+        saved_df = saved_df.where(saved_df > min_saved, 0)
         return saved_df

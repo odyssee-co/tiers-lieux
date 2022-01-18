@@ -13,7 +13,7 @@ if __name__ == "__main__":
                         help="number of offices")
     parser.add_argument("--verbose", "-v", action="store_true", help="verbose mode")
     parser.add_argument("--sample", "-s", type=float, default=1, help="sample rate")
-    parser.add_argument("--min", "-m", type=float, default=15000, help="Minimum saved \
+    parser.add_argument("--min", "-m", type=float, default=10000, help="Minimum saved \
                         distance for an employee to choose an office")
     parser.add_argument("--solver", type=str, help="use mip solver (glpk|cbc)")
     parser.add_argument("--show", action="store_true", help="show the data")
