@@ -4,6 +4,7 @@ import pandas as pd
 import geopandas as gpd
 import numpy as np
 import os
+from esda.adbscan import ADBSCAN
 
 def compute_initial_requests(data_path):
     """
@@ -39,9 +40,9 @@ def compute_initial_requests(data_path):
         persons_df.to_csv(data_path+"/processed/initial_request.csv", sep=";", index=False)
 
 
-def get_top_50_offices(data_path):
+def get_top_50_municipalities(data_path):
     """
-    Return the top 50 communes in midi-pyrénnées with the most inhabitants
+    Return the top 50 municipalities with the most inhabitants
     leaving every days to go to work in another communes.
     """
     persons_df = pd.read_csv(data_path+"/processed/persons.csv")
@@ -50,9 +51,41 @@ def get_top_50_offices(data_path):
                              ["09", "11", "31", "32", "81", "82"])]
     persons_df = persons_df[persons_df["origin_id"].astype(str)
                                     != persons_df["destination_id"].astype(str)]
+    from IPython import embed; embed()
     top_50 = list(persons_df["origin_id"].value_counts()[0:50].index)
     return top_50
 
+def get_top_50_clusters(data_path, eps=5000, min_samples=100):
+    """
+    Return the top 50 adbscan cluster centroids with the most inhabitants
+    leaving every days to go to work in another communes.
+    """
+    persons_df = pd.read_csv(data_path+"/processed/persons.csv")
+    persons_df = persons_df[persons_df["origin_id"].str[0:2].isin(
+                             #["09", "12", "31", "32", "46", "65", "81", "82"])]
+                             ["09", "11", "31", "32", "81", "82"])]
+    persons_df = persons_df[persons_df["origin_id"].astype(str)
+                                    != persons_df["destination_id"].astype(str)]
+    geometry=gpd.points_from_xy(persons_df.origin_x,
+                                persons_df.origin_y,
+                                crs="EPSG:2154")
+    persons_df = gpd.GeoDataFrame(persons_df, geometry=geometry)
+    pop = persons_df["origin_id"].value_counts()
+    pop_df = pd.DataFrame({'origin_id':pop.index, 'population':pop.values})
+    pop_df = pd.merge(pop_df, persons_df[["origin_id", "geometry"]],
+                          on="origin_id", how="left")
+    pop_df = pop_df[~pop_df.origin_id.duplicated()]
+    pop_df = gpd.GeoDataFrame(pop_df)
+    pop_df["X"] = pop_df.geometry.x
+    pop_df["Y"] = pop_df.geometry.y
+    pop_df = pop_df.dropna()
+    adbs = ADBSCAN(eps, min_samples, pct_exact=1, keep_solus=True)
+    #adbs.fit(pop_df)
+    adbs.fit(pop_df, sample_weight=pop_df["population"])
+    from IPython import embed; embed()
+    #print(adbs.votes[adbs.votes["lbls"].astype("int")>0])
+    top_50 = list(persons_df["origin_id"].value_counts()[0:50].index)
+    return top_50
 
 def compute_offices_request(data_path, offices_file=None):
     """
@@ -70,7 +103,7 @@ def compute_offices_request(data_path, offices_file=None):
                 for line in f:
                     offices.append(line.strip())
         else:
-            offices = get_top_50_offices(data_path)
+            offices = get_top_50_municipalities(data_path)
         offices_df = communes_df[communes_df["commune_id"].isin(offices)]
         offices_df = offices_df.rename(columns={"commune_id":"office_id"})
         offices_df = offices_df[["office_id", "x", "y"]]

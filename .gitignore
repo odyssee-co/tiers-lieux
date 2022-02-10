@@ -70,3 +70,4 @@ tags
 *.swp
 *.zip
 data
+*.ipynb

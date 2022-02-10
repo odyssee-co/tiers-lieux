@@ -23,7 +23,7 @@ def get_communes(data_path):
     return geo dataFrame with communes names, ids, geometry, and coordinates (x,y)
     df_communes: nom, commune_id, geometry, x, y
     """
-    df_communes = gpd.read_file(data_path+"iris/communes-20210101.shp")
+    df_communes = gpd.read_file(data_path+"/iris/communes-20210101.shp")
     df_communes.geometry = df_communes.geometry.to_crs(2154)
     df_communes["x"] = df_communes.geometry.centroid.x
     df_communes["y"] = df_communes.geometry.centroid.y

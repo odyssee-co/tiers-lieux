@@ -21,7 +21,7 @@ def od_shares(data_path):
     required_origins = persons_df["origin_id"].unique()
     required_destinations = persons_df["destination_id"].unique()
 
-    top_50 = req.get_top_50_offices(data_path)
+    top_50 = req.get_top_50_municipalities(data_path)
     required_destinations = np.concatenate((required_destinations, top_50))
 
     df_od = df_od[df_od["origin_id"].isin(required_origins)]
