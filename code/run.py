@@ -19,8 +19,8 @@ if __name__ == "__main__":
     parser.add_argument("--show", action="store_true", help="show the data")
     parser.add_argument("--heuristic", type=str, help="use heuristic search (rand, rand_w, evol)")
     args=parser.parse_args()
-    data_path = args.data_path
     nb_offices = args.nb_offices
+    data_path = os.path.abspath(args.data_path)
     verbose = args.verbose
     solver = args.solver
     sample_rate = args.sample

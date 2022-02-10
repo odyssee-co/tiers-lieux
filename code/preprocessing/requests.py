@@ -30,6 +30,9 @@ def compute_initial_requests(data_path):
         reg_df = reg_df[["origin_id", "destination_id"]]
 
         persons_df = pd.concat([al_df, met_df, reg_df])
+        departments = ["09", "11", "31", "32", "81", "82"]
+        persons_df = persons_df[persons_df["origin_id"].str[0:2].isin(departments)]
+        persons_df = persons_df[persons_df["destination_id"].str[0:2].isin(departments)]
         persons_df = com.get_coord(persons_df, communes_df)
         persons_df["person_id"] = np.arange(len(persons_df))
         persons_df.to_csv(data_path+"/processed/persons.csv", index=False)
@@ -45,13 +48,9 @@ def get_top_50_municipalities(data_path):
     Return the top 50 municipalities with the most inhabitants
     leaving every days to go to work in another communes.
     """
-    persons_df = pd.read_csv(data_path+"/processed/persons.csv")
-    persons_df = persons_df[persons_df["origin_id"].str[0:2].isin(
-                             #["09", "12", "31", "32", "46", "65", "81", "82"])]
-                             ["09", "11", "31", "32", "81", "82"])]
-    persons_df = persons_df[persons_df["origin_id"].astype(str)
-                                    != persons_df["destination_id"].astype(str)]
-    from IPython import embed; embed()
+    persons_df = pd.read_csv(data_path+"/processed/persons.csv", dtype=str)
+    persons_df = persons_df[persons_df["origin_id"]
+                                    != persons_df["destination_id"]]
     top_50 = list(persons_df["origin_id"].value_counts()[0:50].index)
     return top_50
 
@@ -60,7 +59,7 @@ def get_top_50_clusters(data_path, eps=5000, min_samples=100):
     Return the top 50 adbscan cluster centroids with the most inhabitants
     leaving every days to go to work in another communes.
     """
-    persons_df = pd.read_csv(data_path+"/processed/persons.csv")
+    persons_df = pd.read_csv(data_path+"/processed/persons.csv", dtype=str)
     persons_df = persons_df[persons_df["origin_id"].str[0:2].isin(
                              #["09", "12", "31", "32", "46", "65", "81", "82"])]
                              ["09", "11", "31", "32", "81", "82"])]
@@ -85,6 +84,7 @@ def get_top_50_clusters(data_path, eps=5000, min_samples=100):
     from IPython import embed; embed()
     #print(adbs.votes[adbs.votes["lbls"].astype("int")>0])
     top_50 = list(persons_df["origin_id"].value_counts()[0:50].index)
+
     return top_50
 
 def compute_offices_request(data_path, offices_file=None):

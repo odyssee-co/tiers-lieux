@@ -15,9 +15,7 @@ def od_shares(data_path):
             dtype = {"origin_id": str, "destination_id": str})
 
 
-    persons_df = pd.read_csv(data_path+"/processed/persons.csv")
-    persons_df = persons_df[persons_df["origin_id"].str[0:2].isin(
-                             ["09", "11", "31", "32", "81", "82"])]
+    persons_df = pd.read_csv(data_path+"/processed/persons.csv", dtype=str)
     required_origins = persons_df["origin_id"].unique()
     required_destinations = persons_df["destination_id"].unique()
 
@@ -62,12 +60,12 @@ class Router:
         print("Routing %s..."%requests_file)
         command = [
         shutil.which("java"),
-        "-cp", self.data_path + self.jar_file,
+        "-cp", "%s/%s"%(self.data_path, self.jar_file),
         #"-Xmx14G",
         "org.eqasim.odyssee.RunBatchRouting",
-        "--config-path", self.data_path + conf_file,
-        "--input-path", self.data_path + requests_file,
-        "--output-path", self.data_path + "/processed/" + output_file
+        "--config-path", "%s/%s"%(self.data_path, conf_file),
+        "--input-path", "%s/%s"%(self.data_path, requests_file),
+        "--output-path", "%s/processed/%s"%(self.data_path, output_file)
         ]
         if return_flows:
             command += [
