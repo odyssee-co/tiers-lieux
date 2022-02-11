@@ -15,6 +15,9 @@ if __name__ == "__main__":
     parser.add_argument("--sample", "-s", type=float, default=1, help="sample rate")
     parser.add_argument("--min", "-m", type=float, default=10000, help="Minimum saved \
                         distance for an employee to choose an office")
+    parser.add_argument("--chalandise", "-c", type=float, default=15000, help="\
+                        Maximum distance distance for an employee to consider \
+                        this office")
     parser.add_argument("--solver", type=str, help="use mip solver (glpk|cbc)")
     parser.add_argument("--show", action="store_true", help="show the data")
     parser.add_argument("--heuristic", type=str, help="use heuristic search (rand, rand_w, evol)")
@@ -25,6 +28,7 @@ if __name__ == "__main__":
     solver = args.solver
     sample_rate = args.sample
     solver = args.solver
+    chalandise = args.chalandise
 
 
     processed_path = data_path+"/processed"
@@ -32,7 +36,7 @@ if __name__ == "__main__":
         os.mkdir(processed_path)
 
     r = router.Router(data_path)
-    saved_df = r.get_saved_distance(min_saved=args.min)
+    saved_df = r.get_saved_distance(min_saved=args.min, chalandise=chalandise)
     if sample_rate < 1:
         saved_df = saved_df.sample(round(saved_df.shape[0]*sample_rate))
 

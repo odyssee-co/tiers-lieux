@@ -51,6 +51,9 @@ def get_top_50_municipalities(data_path):
     persons_df = pd.read_csv(data_path+"/processed/persons.csv", dtype=str)
     persons_df = persons_df[persons_df["origin_id"]
                                     != persons_df["destination_id"]]
+    #we exclude Toulouse from the list of candidates
+    persons_df = persons_df[persons_df["origin_id"]
+                                    != "31555"]
     top_50 = list(persons_df["origin_id"].value_counts()[0:50].index)
     return top_50
 

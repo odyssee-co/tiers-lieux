@@ -100,7 +100,7 @@ class Router:
         return pd.read_csv(routed_offices_path, sep=";")
 
 
-    def get_saved_distance(self, use_modal_share=False, min_saved=10000):
+    def get_saved_distance(self, use_modal_share=False, min_saved=10000, chalandise=0):
         """
         Return a dataframe containing for each employee, the time he would save working
         in each office (0 if the saved time if negative or inferior to min_saved).
@@ -108,6 +108,10 @@ class Router:
         """
         routed_inital = self.get_routed_initial()
         routed_offices = self.get_routed_office()
+        if chalandise > 0:
+            routed_offices.car_distance.where(routed_offices.
+                                              car_distance<chalandise,
+                                              float("inf"), inplace=True)
         routed_inital = routed_inital.rename(columns={
             "office_id" : "original_office",
             "car_travel_time" : "baseline_car_travel_time",
