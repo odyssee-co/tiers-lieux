@@ -5,6 +5,33 @@ import preprocessing.requests as req
 import pandas as pd
 from pathlib import Path
 import numpy as np
+import preprocessing.communes as communes
+
+def get_matrix(data_path):
+    path = f"{data_path}/all_request.csv"
+    if not os.path.isfile(path):
+        departments = ["09", "11", "31", "32", "81", "82"]
+        municipalities_df = communes.get_communes(data_path, departments=departments)
+        municipalities_df.rename(columns=({"x":"origin_x",
+                                           "y":"origin_y",
+                                           "commune_id":"person_id"}),
+                                           inplace=True)
+        requests_df = []
+        for index, office in municipalities_df.iterrows():
+            request_df = municipalities_df.copy()
+            request_df["destination_x"] = office["origin_x"]
+            request_df["destination_y"] = office["origin_y"]
+            request_df["office_id"] = office["person_id"]
+            request_df = request_df[[
+                "person_id", "office_id", "origin_x", "origin_y", "destination_x",
+                "destination_y"]]
+            requests_df.append(request_df)
+        requests_df = pd.concat(requests_df)
+        requests_df.to_csv(data_path+"/all_request.csv", sep=";", index=False)
+    r = Router(data_path)
+    r.run("all_request.csv", "/matsim-conf/toulouse_config.xml", "routed_all.csv")
+
+
 
 
 def od_shares(data_path):
@@ -100,7 +127,7 @@ class Router:
         return pd.read_csv(routed_offices_path, sep=";")
 
 
-    def get_saved_distance(self, use_modal_share=False, min_saved=10000, chalandise=0):
+    def get_saved_distance(self, use_modal_share=False, min_saved=10000, isochrone=0):
         """
         Return a dataframe containing for each employee, the time he would save working
         in each office (0 if the saved time if negative or inferior to min_saved).
@@ -108,9 +135,9 @@ class Router:
         """
         routed_inital = self.get_routed_initial()
         routed_offices = self.get_routed_office()
-        if chalandise > 0:
+        if isochrone > 0:
             routed_offices.car_distance.where(routed_offices.
-                                              car_distance<chalandise,
+                                              car_travel_time<isochrone*60,
                                               float("inf"), inplace=True)
         routed_inital = routed_inital.rename(columns={
             "office_id" : "original_office",

@@ -1,3 +1,4 @@
+#from IPython import embed; embed()
 import router
 import optimizer
 import os
@@ -6,7 +7,6 @@ import visualization
 
 
 if __name__ == "__main__":
-    #from IPython import embed; embed()
     parser = argparse.ArgumentParser(description="Run the optimizer")
     parser.add_argument("--data_path", default="../data", help="path to the data")
     parser.add_argument("--nb_offices", "-n", type=int, default=10,
@@ -15,8 +15,8 @@ if __name__ == "__main__":
     parser.add_argument("--sample", "-s", type=float, default=1, help="sample rate")
     parser.add_argument("--min", "-m", type=float, default=10000, help="Minimum saved \
                         distance for an employee to choose an office")
-    parser.add_argument("--chalandise", "-c", type=float, default=15000, help="\
-                        Maximum distance distance for an employee to consider \
+    parser.add_argument("--isochrone", "-c", type=float, default=15, help="\
+                        Maximum travel time (in min) for an employee to consider \
                         this office")
     parser.add_argument("--solver", type=str, help="use mip solver (glpk|cbc)")
     parser.add_argument("--show", action="store_true", help="show the data")
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     solver = args.solver
     sample_rate = args.sample
     solver = args.solver
-    chalandise = args.chalandise
+    isochrone = args.isochrone
 
 
     processed_path = data_path+"/processed"
@@ -36,7 +36,7 @@ if __name__ == "__main__":
         os.mkdir(processed_path)
 
     r = router.Router(data_path)
-    saved_df = r.get_saved_distance(min_saved=args.min, chalandise=chalandise)
+    saved_df = r.get_saved_distance(min_saved=args.min, isochrone=isochrone)
     if sample_rate < 1:
         saved_df = saved_df.sample(round(saved_df.shape[0]*sample_rate))
 
@@ -63,3 +63,4 @@ if __name__ == "__main__":
 
     if args.show:
         visualization.viz(res)
+    router.get_matrix(data_path)

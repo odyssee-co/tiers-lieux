@@ -7,11 +7,9 @@
 import geopandas as gpd
 import pandas as pd
 import router
-import optimizer
 import matplotlib as mpl
-import geoplot as gplt
 import numpy as np
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
 mpl.rcParams['figure.figsize'] = [20, 20]
 
 
@@ -145,7 +143,7 @@ chosen_muni.plot(ax=ax, color="red", linewidth=12)
 old_chosen_muni.plot(ax=ax, color="blue", linewidth=4)
 all_muni = pd.merge(chosen_muni, old_chosen_muni, on=["commune_id", "geometry"], how="outer")
 all_muni = pd.merge(all_muni, df_names.rename(columns={"municipality_id":"commune_id"}), on="commune_id", how="left")
-for x, y, label in zip(all_muni.geometry.x, all_muni.geometry.y, all_muni.label): 
+for x, y, label in zip(all_muni.geometry.x, all_muni.geometry.y, all_muni.label):
     ax.annotate(label, xy=(x, y), xytext=(3, 3), textcoords="offset points")
 
 
@@ -199,7 +197,3 @@ plt.grid()
 
 
 # In[ ]:
-
-
-
-

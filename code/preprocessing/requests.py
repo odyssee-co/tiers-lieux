@@ -15,7 +15,6 @@ def compute_initial_requests(data_path):
     if not os.path.isfile("%s/processed/initial_request.csv"%data_path):
         print("Computing initial request...")
         communes_df = com.get_communes(data_path)
-        communes_df.to_file(data_path+"/processed/communes.gpkg", driver = "GPKG")
 
         al_df = hr.process_action_logement(data_path, communes_df)
         #al_df.to_csv(data_path+"/processed/od_al.csv", sep=";", index=False)

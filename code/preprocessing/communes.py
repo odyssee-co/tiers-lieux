@@ -1,5 +1,6 @@
 import geopandas as gpd
 import pandas as pd
+import os
 
 def get_coord(df_persons, communes):
     """
@@ -18,19 +19,28 @@ def get_coord(df_persons, communes):
     #df_persons.to_csv(data_path+"/processed/od_al.csv", sep=";", index=False)
     return df_persons
 
-def get_communes(data_path):
+def get_communes(data_path, departments=None):
     """
     return geo dataFrame with communes names, ids, geometry, and coordinates (x,y)
     df_communes: nom, commune_id, geometry, x, y
     """
-    df_communes = gpd.read_file(data_path+"/iris/communes-20210101.shp")
-    df_communes.geometry = df_communes.geometry.to_crs(2154)
-    df_communes["x"] = df_communes.geometry.centroid.x
-    df_communes["y"] = df_communes.geometry.centroid.y
-    df_communes = df_communes[["nom","insee", "geometry","x","y"]]
-    df_communes = df_communes.rename(columns={"insee": "commune_id"})
-    df_communes["commune_id"] = df_communes["commune_id"].astype(str)
+    path = f"{data_path}/communes.gpkg"
+    if os.path.isfile(path):
+        df_communes = gpd.read_file(path, dtype={"commune_id":str})
+    else:
+        df_communes = gpd.read_file(data_path+"/iris/communes-20210101.shp")
+        df_communes.geometry = df_communes.geometry.to_crs(2154)
+        df_communes["x"] = df_communes.geometry.centroid.x
+        df_communes["y"] = df_communes.geometry.centroid.y
+        df_communes = df_communes[["nom","insee", "geometry","x","y"]]
+        df_communes = df_communes.rename(columns={"insee": "commune_id"})
+        df_communes["commune_id"] = df_communes["commune_id"].astype(str)
+        df_communes.to_file(path, driver = "GPKG")
+    if departments:
+        df_communes["department"] = df_communes["commune_id"].str[:2]
+        df_communes = df_communes[df_communes["department"].isin(departments)]
     return df_communes
+
 
 def get_insee_name(data_path):
     df_names = pd.read_excel(data_path+"/reference_IRIS_geo2017.xls", skiprows=5)
