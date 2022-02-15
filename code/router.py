@@ -7,29 +7,6 @@ from pathlib import Path
 import numpy as np
 import preprocessing.communes as communes
 
-def get_matrix(data_path):
-    path = f"{data_path}/all_request.csv"
-    if not os.path.isfile(path):
-        departments = ["09", "11", "31", "32", "81", "82"]
-        municipalities_df = communes.get_communes(data_path, departments=departments)
-        municipalities_df.rename(columns=({"x":"origin_x",
-                                           "y":"origin_y",
-                                           "commune_id":"person_id"}),
-                                           inplace=True)
-        requests_df = []
-        for index, office in municipalities_df.iterrows():
-            request_df = municipalities_df.copy()
-            request_df["destination_x"] = office["origin_x"]
-            request_df["destination_y"] = office["origin_y"]
-            request_df["office_id"] = office["person_id"]
-            request_df = request_df[[
-                "person_id", "office_id", "origin_x", "origin_y", "destination_x",
-                "destination_y"]]
-            requests_df.append(request_df)
-        requests_df = pd.concat(requests_df)
-        requests_df.to_csv(data_path+"/all_request.csv", sep=";", index=False)
-    r = Router(data_path)
-    r.run("all_request.csv", "/matsim-conf/toulouse_config.xml", "routed_all.csv")
 
 
 
@@ -75,56 +52,62 @@ class Router:
 
     jar_file = "flow-1.2.0.jar"
 
-    def __init__(self, data_path):
+    def __init__(self, data_path, population, departments, matsim_conf):
         self.data_path = data_path
+        self.population = population
+        self.departments = departments
+        self.matsim_conf = matsim_conf
+        self.suffix = str.join('-', departments)
+
+    def compute_request(self, preselected=None):
+        path = f"{self.data_path}/processed/request_{self.suffix}.csv"
+        if not os.path.isfile(path):
+            print("Computing request...")
+            municipalities_df = communes.get_communes(self.data_path,
+                                                      departments=self.departments)
+            origins_df = municipalities_df[municipalities_df.commune_id
+                                       .isin(self.population.origin_id.unique())].copy()
+            municipalities_df.rename(columns=({"x":"destination_x",
+                                               "y":"destination_y",
+                                               "commune_id":"office_id"}),
+                                               inplace=True)
+
+            #from IPython import embed; embed()
+            requests_df = []
+            for index, origin in origins_df.iterrows():
+                request_df = municipalities_df.copy()
+                request_df["origin_x"] = origin["x"]
+                request_df["origin_y"] = origin["y"]
+                request_df["person_id"] = origin["commune_id"]
+                request_df = request_df[[
+                    "person_id", "office_id", "origin_x", "origin_y", "destination_x",
+                    "destination_y"]]
+                requests_df.append(request_df)
+            requests_df = pd.concat(requests_df)
+            requests_df.to_csv(path, sep=";", index=False)
 
 
-    def run(self, requests_file, conf_file, output_file, return_flows=False):
+    def get_routed(self):
         """
         read df_requests from csv and call MATSim router
         person_id;office_id;origin_x;origin_y;destination_x;destination_y
         """
-        print("Routing %s..."%requests_file)
-        command = [
-        shutil.which("java"),
-        "-cp", "%s/%s"%(self.data_path, self.jar_file),
-        #"-Xmx14G",
-        "org.eqasim.odyssee.RunBatchRouting",
-        "--config-path", "%s/%s"%(self.data_path, conf_file),
-        "--input-path", "%s/%s"%(self.data_path, requests_file),
-        "--output-path", "%s/processed/%s"%(self.data_path, output_file)
-        ]
-        if return_flows:
-            command += [
-            "--flow-output-path", "flows.csv"
-            ]
-        sp.check_call(command, cwd=Path(self.data_path).parent)
-
-
-    def get_routed_initial(self):
-        """
-        return a dataframe with the travel time for each employee to his original office
-        "office_id", "car_travel_time", "car_distance", "pt_travel_time", "pt_distance"
-        """
-        routed_initial_path = "%s/processed/routed_initial.csv"%self.data_path
-        if not os.path.isfile(routed_initial_path):
-            req.compute_initial_requests(self.data_path)
-            self.run("/processed/initial_request.csv",
-                    "/matsim-conf/toulouse_config.xml", "routed_initial.csv")
-        return pd.read_csv(routed_initial_path, sep=";")
-
-
-    def get_routed_office(self):
-        """
-        return a dataframe with the travel time for each employees to each office
-        "office_id", "car_travel_time", "car_distance", "pt_travel_time", "pt_distance"
-        """
-        routed_offices_path = "%s/processed/routed_offices.csv"%self.data_path
-        if not os.path.isfile(routed_offices_path):
-            req.compute_offices_request(self.data_path)
-            self.run("/processed/offices_request.csv",
-                    "/matsim-conf/toulouse_config.xml", "routed_offices.csv")
-        return pd.read_csv(routed_offices_path, sep=";")
+        routed_path = f"{self.data_path}/processed/routed_{self.suffix}.csv"
+        if not os.path.isfile(routed_path):
+            req_path = f"{self.data_path}/processed/request_{self.suffix}.csv"
+            if not os.path.isfile(req_path):
+                self.compute_request()
+            print("Routing...")
+            command = [
+                shutil.which("java"),
+                "-cp", f"{self.data_path}/{self.jar_file}",
+                #"-Xmx14G",
+                "org.eqasim.odyssee.RunBatchRouting",
+                "--config-path", f"{self.data_path}/{self.matsim_conf}",
+                "--input-path", req_path,
+                "--output-path", routed_path]
+            sp.check_call(command, cwd=Path(self.data_path).parent)
+        return pd.read_csv(routed_path, sep=";", dtype=str)
 
 
     def get_saved_distance(self, use_modal_share=False, min_saved=10000, isochrone=0):
@@ -133,8 +116,7 @@ class Router:
         in each office (0 if the saved time if negative or inferior to min_saved).
 
         """
-        routed_inital = self.get_routed_initial()
-        routed_offices = self.get_routed_office()
+        routed_df = self.get_routed()
         if isochrone > 0:
             routed_offices.car_distance.where(routed_offices.
                                               car_travel_time<isochrone*60,

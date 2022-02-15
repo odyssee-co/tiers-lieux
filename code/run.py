@@ -4,6 +4,7 @@ import optimizer
 import os
 import argparse
 import visualization
+import preprocessing.process_hr as pop
 
 
 if __name__ == "__main__":
@@ -30,12 +31,16 @@ if __name__ == "__main__":
     solver = args.solver
     isochrone = args.isochrone
 
+    departments = ["09", "11", "31", "32", "81", "82"]
+    matsim_conf = "matsim-conf/toulouse_config.xml"
+
 
     processed_path = data_path+"/processed"
     if not os.path.isdir(processed_path):
         os.mkdir(processed_path)
 
-    r = router.Router(data_path)
+    population = pop.get_population(data_path, departments)
+    r = router.Router(data_path, population, departments, matsim_conf)
     saved_df = r.get_saved_distance(min_saved=args.min, isochrone=isochrone)
     if sample_rate < 1:
         saved_df = saved_df.sample(round(saved_df.shape[0]*sample_rate))
