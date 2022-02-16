@@ -1,7 +1,6 @@
 import subprocess as sp
 import shutil
 import os
-import preselection
 import pandas as pd
 from pathlib import Path
 import numpy as np
@@ -171,7 +170,7 @@ class Router:
 
         saved_df.columns = saved_df.columns.astype(str)
         saved_df.drop(columns=exclude, inplace=True)
-        if preselection:
+        if self.preselection:
             saved_df = saved_df[self.preselection]
         saved_df = saved_df.where(saved_df > min_saved, 0)
         print(saved_df.shape)

@@ -99,6 +99,7 @@ def evolutionary(saved_df, n, verbose=False, ratio=0.7, nb_it=1000):
     #sample = saved_df[best[1]]
     i = 0
     sample = saved_df.sample(n, axis=1)
+    w_single = np.power(saved_df.sum(),2)
     while i < nb_it:
         i += 1
         res = eval(sample)
@@ -111,8 +112,8 @@ def evolutionary(saved_df, n, verbose=False, ratio=0.7, nb_it=1000):
 
         #calculate weight
         s = sample[sample.sum(axis=1)>0]
-        #s_max = np.power(s.idxmax(axis=1).value_counts(), 2)  #weight is how many times each office is the best choice for one employee with the current selection; pow to be conservative
-        s_max = s.idxmax(axis=1).value_counts()  #weight is how many times each office is the best choice for one employee with the current selection; pow to be conservative
+        s_max = np.power(s.idxmax(axis=1).value_counts(), 2)  #weight is how many times each office is the best choice for one employee with the current selection; pow to be conservative
+        #s_max = s.idxmax(axis=1).value_counts()  #weight is how many times each office is the best choice for one employee with the current selection; pow to be conservative
         #s_max = np.sqrt(s.idxmax(axis=1).value_counts())  #weight is how many times each office is the best choice for one employee with the current selection; pow to be conservative
         w = []
         for m in sample.columns:
@@ -122,7 +123,8 @@ def evolutionary(saved_df, n, verbose=False, ratio=0.7, nb_it=1000):
                 w.append(0.1)
 
         sample1 = sample.sample(nb_to_keep, axis=1, weights = w) #we keep a ratio of the pop with a higher prob for best performing
-        sample2 = saved_df.drop(sample.columns, axis=1).sample(n-nb_to_keep, axis=1) #we complete with random in the remainings pop
+
+        sample2 = saved_df.drop(sample.columns, axis=1).sample(n-nb_to_keep, axis=1, weights=w_single.drop(sample.columns)) #we complete with random in the remainings pop
         sample = sample1.join(sample2)
     return best
 

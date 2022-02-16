@@ -37,7 +37,6 @@ def get_communes(data_path, departments=None):
     df_communes["y"] = df_communes.geometry.centroid.y
     df_communes = df_communes[["nom","insee", "geometry","x","y"]]
     df_communes = df_communes.rename(columns={"insee": "commune_id"})
-    from IPython import embed; embed()
     df_communes.to_file(path, driver = "GPKG")
     return df_communes
 

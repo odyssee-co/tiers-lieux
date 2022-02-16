@@ -42,8 +42,9 @@ if __name__ == "__main__":
         os.mkdir(processed_path)
 
     population = pop.get_population(data_path, departments)
-    preselection = preselection.get_top_50_municipalities(data_path, exclude=exclude)
-    r = router.Router(data_path, population, departments, matsim_conf, preselection=preselection)
+    preselected_muni = None
+    preselected_muni = preselection.get_top_50_municipalities(data_path, exclude=exclude)
+    r = router.Router(data_path, population, departments, matsim_conf, preselection=preselected_muni)
     saved_df = r.get_saved_distance(min_saved=args.min, isochrone=isochrone, exclude=exclude)
     if sample_rate < 1:
         saved_df = saved_df.sample(round(saved_df.shape[0]*sample_rate))
