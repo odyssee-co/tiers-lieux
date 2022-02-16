@@ -1,11 +1,12 @@
 import subprocess as sp
 import shutil
 import os
-import preprocessing.requests as req
+import preselection
 import pandas as pd
 from pathlib import Path
 import numpy as np
 import preprocessing.communes as communes
+import tqdm
 
 
 
@@ -23,7 +24,7 @@ def od_shares(data_path):
     required_origins = persons_df["origin_id"].unique()
     required_destinations = persons_df["destination_id"].unique()
 
-    top_50 = req.get_top_50_municipalities(data_path)
+    top_50 = preselection.get_top_50_municipalities(data_path)
     required_destinations = np.concatenate((required_destinations, top_50))
 
     df_od = df_od[df_od["origin_id"].isin(required_origins)]
@@ -67,12 +68,11 @@ class Router:
                                                       departments=self.departments)
             origins_df = municipalities_df[municipalities_df.commune_id
                                        .isin(self.population.origin_id.unique())].copy()
+
             municipalities_df.rename(columns=({"x":"destination_x",
                                                "y":"destination_y",
                                                "commune_id":"office_id"}),
                                                inplace=True)
-
-            #from IPython import embed; embed()
             requests_df = []
             for index, origin in origins_df.iterrows():
                 request_df = municipalities_df.copy()
@@ -89,7 +89,7 @@ class Router:
 
     def get_routed(self):
         """
-        read df_requests from csv and call MATSim router
+        Call MATSim router
         person_id;office_id;origin_x;origin_y;destination_x;destination_y
         """
         routed_path = f"{self.data_path}/processed/routed_{self.suffix}.csv"
@@ -107,7 +107,14 @@ class Router:
                 "--input-path", req_path,
                 "--output-path", routed_path]
             sp.check_call(command, cwd=Path(self.data_path).parent)
-        return pd.read_csv(routed_path, sep=";", dtype=str)
+        routed_df = pd.read_csv(routed_path, sep=";", dtype={"person_id":str,
+                                                             "office_id":str,
+                                                             "car_travel_time":float,
+                                                             "car_distance":float})
+        routed_df.rename(columns={"person_id":"origin_id",
+                                  "office_id":"destination_id"},
+                                   inplace=True)
+        return routed_df
 
 
     def get_saved_distance(self, use_modal_share=False, min_saved=10000, isochrone=0):
@@ -116,46 +123,51 @@ class Router:
         in each office (0 if the saved time if negative or inferior to min_saved).
 
         """
-        routed_df = self.get_routed()
-        if isochrone > 0:
-            routed_offices.car_distance.where(routed_offices.
-                                              car_travel_time<isochrone*60,
-                                              float("inf"), inplace=True)
-        routed_inital = routed_inital.rename(columns={
-            "office_id" : "original_office",
-            "car_travel_time" : "baseline_car_travel_time",
-            "car_distance" : "baseline_car_distance",
-            "pt_travel_time" : "baseline_pt_travel_time",
-            "pt_distance" : "baseline_pt_distance",
-        })
-        df = pd.merge(routed_inital, routed_offices, on="person_id", how="left")
 
-        if use_modal_share:
-            #We weight the car distance by the modal shares
-            persons_path = self.data_path+"/processed/persons.csv"
-            persons_df = pd.read_csv(persons_path)[["person_id", "origin_id"]]
-            df = pd.merge(df, persons_df, on="person_id", how="left")
-            df["origin_id"] = df["origin_id"].astype("str")
-            df["original_office"] = df["original_office"].astype("str")
-            df["office_id"] = df["office_id"].astype("str")
-            modal_shares = od_shares(self.data_path)
-            df = pd.merge(df, modal_shares.rename(
-                          columns={
-                          "destination_id":"original_office",
-                          "share_car":"share_car_orig"}),
-                          on=["origin_id", "original_office"],
-                          how="left")
-            df = pd.merge(df, modal_shares.rename(
-                          columns={
-                          "destination_id":"office_id",
-                          "share_car":"share_car_new"}),
-                          on=["origin_id", "office_id"],
-                          how="left")
-            df["baseline_car_distance"] *= df["share_car_orig"]
-            df["car_distance"] *= df["share_car_new"]
+        path_saved = f"{self.data_path}/processed/saved_iso{isochrone}_{self.suffix}.csv"
+        if os.path.exists(path_saved):
+            print("Loading saved distances matrix...")
+            saved_df = pd.read_csv(path_saved)
+            saved_df.set_index("person_id", inplace=True)
+        else:
+            routed_df = self.get_routed()
+            distance_df = routed_df.pivot(index="origin_id",
+                                          columns="destination_id",
+                                          values="car_distance")
+            baseline_distance = []
+            for id, row in self.population.iterrows():
+                origin = row["origin_id"]
+                destination = row["destination_id"]
+                try:
+                    baseline_distance.append(distance_df.loc[origin, destination])
+                except KeyError:
+                    baseline_distance.append(np.nan)
+            self.population["baseline_distance"] = baseline_distance
+            self.population.dropna(inplace=True)
 
-        df["saved_travel_distance"] = df["baseline_car_distance"] - df["car_distance"]
-        saved_df = df.pivot(index="person_id", columns="office_id", values="saved_travel_distance")
+            if isochrone > 0:
+                routed_df.car_distance.where(routed_df.
+                                                  car_travel_time<isochrone*60,
+                                                  float("inf"), inplace=True)
+                distance_df = routed_df.pivot(index="origin_id",
+                                              columns="destination_id",
+                                              values="car_distance")
+
+            columns = list(distance_df.columns)
+            saved_df = pd.DataFrame(columns=columns)
+            #self.population = self.population.sample(100) #to_remove
+            print("Computing saved distances matrix...")
+            for id, row in tqdm.tqdm(self.population.iterrows(),
+                                     total=self.population.shape[0]):
+                origin = row["origin_id"]
+                baseline_distance = row["baseline_distance"]
+                distances = distance_df.loc[origin].copy()
+                distances = baseline_distance - distances
+                distances.name = id
+                saved_df = saved_df.append(distances)
+            saved_df.index.names = ['person_id']
+            saved_df.to_csv(path_saved)
+
         saved_df = saved_df.where(saved_df > min_saved, 0)
         saved_df.columns = saved_df.columns.astype(str)
         return saved_df

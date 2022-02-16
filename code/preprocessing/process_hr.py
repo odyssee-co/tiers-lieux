@@ -531,6 +531,7 @@ def get_population(data_path, departments):
 
         persons_df["person_id"] = np.arange(len(persons_df))
         persons_df.dropna(inplace=True)
+        #persons_df.replace(to_replace="31298", value="31471", inplace=True)
         persons_df.to_csv(path, index=False)
 
-    return pd.read_csv(path, dtype=str)
+    return pd.read_csv(path, dtype=str).set_index("person_id")

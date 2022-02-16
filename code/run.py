@@ -68,4 +68,3 @@ if __name__ == "__main__":
 
     if args.show:
         visualization.viz(res)
-    router.get_matrix(data_path)
