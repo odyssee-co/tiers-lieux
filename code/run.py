@@ -5,6 +5,7 @@ import os
 import argparse
 import visualization
 import preprocessing.process_hr as pop
+import preselection
 
 
 if __name__ == "__main__":
@@ -33,6 +34,7 @@ if __name__ == "__main__":
 
     departments = ["09", "11", "31", "32", "81", "82"]
     matsim_conf = "matsim-conf/toulouse_config.xml"
+    exclude = ["31555"]
 
 
     processed_path = data_path+"/processed"
@@ -40,8 +42,9 @@ if __name__ == "__main__":
         os.mkdir(processed_path)
 
     population = pop.get_population(data_path, departments)
-    r = router.Router(data_path, population, departments, matsim_conf)
-    saved_df = r.get_saved_distance(min_saved=args.min, isochrone=isochrone)
+    preselection = preselection.get_top_50_municipalities(data_path, exclude=exclude)
+    r = router.Router(data_path, population, departments, matsim_conf, preselection=preselection)
+    saved_df = r.get_saved_distance(min_saved=args.min, isochrone=isochrone, exclude=exclude)
     if sample_rate < 1:
         saved_df = saved_df.sample(round(saved_df.shape[0]*sample_rate))
 

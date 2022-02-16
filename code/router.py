@@ -53,14 +53,15 @@ class Router:
 
     jar_file = "flow-1.2.0.jar"
 
-    def __init__(self, data_path, population, departments, matsim_conf):
+    def __init__(self, data_path, population, departments, matsim_conf, preselection=None):
         self.data_path = data_path
         self.population = population
         self.departments = departments
+        self.preselection = preselection
         self.matsim_conf = matsim_conf
         self.suffix = str.join('-', departments)
 
-    def compute_request(self, preselected=None):
+    def compute_request(self):
         path = f"{self.data_path}/processed/request_{self.suffix}.csv"
         if not os.path.isfile(path):
             print("Computing request...")
@@ -73,6 +74,10 @@ class Router:
                                                "y":"destination_y",
                                                "commune_id":"office_id"}),
                                                inplace=True)
+
+            if self.preselection:
+                municipalities_df = municipalities_df[municipalities_df.office_id
+                                           .isin(self.preselection)].copy()
             requests_df = []
             for index, origin in origins_df.iterrows():
                 request_df = municipalities_df.copy()
@@ -117,13 +122,12 @@ class Router:
         return routed_df
 
 
-    def get_saved_distance(self, use_modal_share=False, min_saved=10000, isochrone=0):
+    def get_saved_distance(self, use_modal_share=False, min_saved=10000, isochrone=0, exclude=[]):
         """
         Return a dataframe containing for each employee, the time he would save working
         in each office (0 if the saved time if negative or inferior to min_saved).
 
         """
-
         path_saved = f"{self.data_path}/processed/saved_iso{isochrone}_{self.suffix}.csv"
         if os.path.exists(path_saved):
             print("Loading saved distances matrix...")
@@ -168,6 +172,10 @@ class Router:
             saved_df.index.names = ['person_id']
             saved_df.to_csv(path_saved)
 
-        saved_df = saved_df.where(saved_df > min_saved, 0)
         saved_df.columns = saved_df.columns.astype(str)
+        saved_df.drop(columns=exclude, inplace=True)
+        if preselection:
+            saved_df = saved_df[self.preselection]
+        saved_df = saved_df.where(saved_df > min_saved, 0)
+        print(saved_df.shape)
         return saved_df

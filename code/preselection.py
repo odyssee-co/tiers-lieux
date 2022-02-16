@@ -2,7 +2,7 @@ import pandas as pd
 import geopandas as gpd
 from esda.adbscan import ADBSCAN
 
-def get_top_50_municipalities(data_path):
+def get_top_50_municipalities(data_path, exclude=[]):
     """
     Return the top 50 municipalities with the most inhabitants
     leaving every days to go to work in another communes.
@@ -11,8 +11,8 @@ def get_top_50_municipalities(data_path):
     persons_df = persons_df[persons_df["origin_id"]
                                     != persons_df["destination_id"]]
     #we exclude Toulouse from the list of candidates
-    persons_df = persons_df[persons_df["origin_id"]
-                                    != "31555"]
+
+    persons_df = persons_df[~persons_df.origin_id.isin(exclude)]
     top_50 = list(persons_df["origin_id"].value_counts()[0:50].index)
     return top_50
 
