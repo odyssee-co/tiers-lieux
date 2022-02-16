@@ -75,9 +75,6 @@ class Router:
                                                "commune_id":"office_id"}),
                                                inplace=True)
 
-            if self.preselection:
-                municipalities_df = municipalities_df[municipalities_df.office_id
-                                           .isin(self.preselection)].copy()
             requests_df = []
             for index, origin in origins_df.iterrows():
                 request_df = municipalities_df.copy()

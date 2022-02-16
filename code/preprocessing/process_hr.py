@@ -510,7 +510,7 @@ def get_population(data_path, departments):
     path = f"{data_path}/processed/persons.csv"
     if not os.path.isfile(path):
         print("Computing population...")
-        communes_df = com.get_communes(data_path)
+        communes_df = com.get_communes(data_path, departments)
 
         al_df = process_action_logement(data_path, communes_df)
         #al_df.to_csv(data_path+"/processed/od_al.csv", sep=";", index=False)

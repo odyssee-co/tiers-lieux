@@ -28,16 +28,16 @@ def get_communes(data_path, departments=None):
     if os.path.isfile(path):
         return gpd.read_file(path, dtype={"commune_id":str})
     print("Processing municipalities...")
-    df_communes = gpd.read_file(data_path+"/iris/communes-20210101.shp")
+    df_communes = gpd.read_file(data_path+"/iris/communes-20210101.shp", dtype={"insee":str})
+    if departments:
+        df_communes["department"] = df_communes["insee"].str[:2]
+        df_communes = df_communes[df_communes["department"].isin(departments)]
     df_communes.geometry = df_communes.geometry.to_crs(2154)
     df_communes["x"] = df_communes.geometry.centroid.x
     df_communes["y"] = df_communes.geometry.centroid.y
     df_communes = df_communes[["nom","insee", "geometry","x","y"]]
     df_communes = df_communes.rename(columns={"insee": "commune_id"})
-    df_communes["commune_id"] = df_communes["commune_id"].astype(str)
-    if departments:
-        df_communes["department"] = df_communes["commune_id"].str[:2]
-        df_communes = df_communes[df_communes["department"].isin(departments)]
+    from IPython import embed; embed()
     df_communes.to_file(path, driver = "GPKG")
     return df_communes
 
