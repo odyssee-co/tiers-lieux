@@ -66,14 +66,13 @@ class Router:
             print("Computing request...")
             municipalities_df = communes.get_communes(self.data_path,
                                                       departments=self.departments)
-            origins_df = municipalities_df[municipalities_df.commune_id
-                                       .isin(self.population.origin_id.unique())].copy()
-
+            #origins_df = municipalities_df[municipalities_df.commune_id
+            #                           .isin(self.population.origin_id.unique())].copy()
+            origins_df = municipalities_df.copy()
             municipalities_df.rename(columns=({"x":"destination_x",
                                                "y":"destination_y",
                                                "commune_id":"office_id"}),
                                                inplace=True)
-
             requests_df = []
             for index, origin in origins_df.iterrows():
                 request_df = municipalities_df.copy()
@@ -86,7 +85,6 @@ class Router:
                 requests_df.append(request_df)
             requests_df = pd.concat(requests_df)
             requests_df.to_csv(path, sep=";", index=False)
-
 
     def get_routed(self):
         """
@@ -130,6 +128,7 @@ class Router:
             saved_df = pd.read_csv(path_saved)
             saved_df.set_index("person_id", inplace=True)
         else:
+            #calculate baseline car distance
             routed_df = self.get_routed()
             distance_df = routed_df.pivot(index="origin_id",
                                           columns="destination_id",
@@ -145,6 +144,7 @@ class Router:
             self.population["baseline_distance"] = baseline_distance
             self.population.dropna(inplace=True)
 
+            #filter out co-working spaces that are too far from home
             if isochrone > 0:
                 routed_df.car_distance.where(routed_df.
                                                   car_travel_time<isochrone*60,

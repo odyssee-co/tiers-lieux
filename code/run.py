@@ -4,7 +4,7 @@ import optimizer
 import os
 import argparse
 import visualization
-import preprocessing.process_hr as pop
+import preprocessing.population as pop
 import preselection
 
 
@@ -17,10 +17,11 @@ if __name__ == "__main__":
     parser.add_argument("--sample", "-s", type=float, default=1, help="sample rate")
     parser.add_argument("--min", "-m", type=float, default=10000, help="Minimum saved \
                         distance for an employee to choose an office")
-    parser.add_argument("--isochrone", "-c", type=float, default=15, help="\
+    parser.add_argument("--isochrone", "-i", type=float, default=15, help="\
                         Maximum travel time (in min) for an employee to consider \
                         this office")
     parser.add_argument("--solver", type=str, help="use mip solver (glpk|cbc)")
+    parser.add_argument("--pop", type=str, default="insee", help="population source (insee|hr)")
     parser.add_argument("--show", action="store_true", help="show the data")
     parser.add_argument("--heuristic", type=str, help="use heuristic search (rand, rand_w, evol)")
     args=parser.parse_args()
@@ -31,6 +32,7 @@ if __name__ == "__main__":
     sample_rate = args.sample
     solver = args.solver
     isochrone = args.isochrone
+    pop_src = args.pop
 
     departments = ["09", "11", "31", "32", "81", "82"]
     matsim_conf = "matsim-conf/toulouse_config.xml"
@@ -41,9 +43,10 @@ if __name__ == "__main__":
     if not os.path.isdir(processed_path):
         os.mkdir(processed_path)
 
-    population = pop.get_population(data_path, departments)
+    #population = pop.get_insee_population(data_path, departments)
+    population = getattr(pop, f"get_{pop_src}_population")(data_path, departments)
     preselected_muni = None
-    preselected_muni = preselection.get_top_50_municipalities(data_path, exclude=exclude)
+    #preselected_muni = preselection.get_top_50_municipalities(data_path, exclude=exclude)
     r = router.Router(data_path, population, departments, matsim_conf, preselection=preselected_muni)
     saved_df = r.get_saved_distance(min_saved=args.min, isochrone=isochrone, exclude=exclude)
     if sample_rate < 1:

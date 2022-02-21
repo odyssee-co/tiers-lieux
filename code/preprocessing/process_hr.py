@@ -507,31 +507,26 @@ def get_population(data_path, departments):
     """
     Call the preprocessing procedures to compute the population
     """
-    path = f"{data_path}/processed/persons.csv"
-    if not os.path.isfile(path):
-        print("Computing population...")
-        communes_df = com.get_communes(data_path, departments)
+    communes_df = com.get_communes(data_path, departments)
 
-        al_df = process_action_logement(data_path, communes_df)
-        #al_df.to_csv(data_path+"/processed/od_al.csv", sep=";", index=False)
-        al_df = al_df[["origin_id", "destination_id"]]
+    al_df = process_action_logement(data_path, communes_df)
+    #al_df.to_csv(data_path+"/processed/od_al.csv", sep=";", index=False)
+    al_df = al_df[["origin_id", "destination_id"]]
 
-        met_df = process_metropole(data_path)
-        #met_df.to_csv(data_path+"/processed/od_metropole.csv", sep=";", index=False)
-        met_df = met_df[["origin_id", "destination_id"]]
+    met_df = process_metropole(data_path)
+    #met_df.to_csv(data_path+"/processed/od_metropole.csv", sep=";", index=False)
+    met_df = met_df[["origin_id", "destination_id"]]
 
-        reg_df = process_region(data_path)
-        #reg_df.to_csv(data_path+"/processed/od_region.csv", index=False)
-        reg_df = reg_df[["origin_id", "destination_id"]]
+    reg_df = process_region(data_path)
+    #reg_df.to_csv(data_path+"/processed/od_region.csv", index=False)
+    reg_df = reg_df[["origin_id", "destination_id"]]
 
-        persons_df = pd.concat([al_df, met_df, reg_df])
+    persons_df = pd.concat([al_df, met_df, reg_df])
 
-        persons_df = persons_df[persons_df["origin_id"].str[0:2].isin(departments)]
-        persons_df = persons_df[persons_df["destination_id"].str[0:2].isin(departments)]
+    persons_df = persons_df[persons_df["origin_id"].str[0:2].isin(departments)]
+    persons_df = persons_df[persons_df["destination_id"].str[0:2].isin(departments)]
 
-        persons_df["person_id"] = np.arange(len(persons_df))
-        persons_df.dropna(inplace=True)
-        #persons_df.replace(to_replace="31298", value="31471", inplace=True)
-        persons_df.to_csv(path, index=False)
-
-    return pd.read_csv(path, dtype=str).set_index("person_id")
+    persons_df.dropna(inplace=True)
+    persons_df["person_id"] = np.arange(len(persons_df))
+    #persons_df.replace(to_replace="31298", value="31471", inplace=True)
+    return persons_df
