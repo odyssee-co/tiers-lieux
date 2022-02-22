@@ -115,12 +115,11 @@ class Router:
                     #will the user keep using car and change office?
                     if uses_car or car_best:
                         if ct < isochrone and b_ct - ct > min_saved:
-                            saved_dist = b_cd - cd
+                            saved_dist = (b_cd - cd) * weight
                     #or switch to pt?
                     else:
                         if b_ct - ptt > min_saved:
-                            saved_dist = b_cd
-                            print(saved_dist)
+                            saved_dist = b_cd * weight
                     saved[office] = saved_dist
                 saved = pd.Series(saved, name=id)
                 saved_df = saved_df.append(saved)

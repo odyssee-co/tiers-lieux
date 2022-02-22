@@ -104,6 +104,7 @@ def mip(saved_df, nb_offices, solver="glpk", verbose=False):
     """
     MIP modelization in pyomo
     """
+    from IPython import embed; embed()
     model = pyo.ConcreteModel()
     model.offices = range(saved_df.shape[1])
     model.employees = range(saved_df.shape[0])
