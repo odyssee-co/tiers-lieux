@@ -60,11 +60,11 @@ if __name__ == "__main__":
     saved_df_w = r.get_saved_distance(min_saved, isochrone=isochrone, min_saved=min_saved, exclude=exclude)
     if sample_rate < 1:
         saved_df_w = saved_df_w.sample(round(saved_df_w.shape[0]*sample_rate))
-    saved_df = saved_df_w.drop("weight")
+    saved_df = saved_df_w.drop("weight", axis=1)
 
-
-    max = 2*optimizer.eval(saved_df)/(1000*saved_df.shape[0]) #upper bound when all offices are available
-    print("nb employee: %s"%saved_df.shape[0])
+    nb_employees = saved_df_w.weight.sum()
+    max = 2*optimizer.eval(saved_df)/(1000*nb_employees) #upper bound when all offices are available
+    print("nb employee: %s"%nb_employees)
     print("max saved distance per day and per employee: %.2f km\n"%max)
     #res = optimizer.exhaustive(saved_df, nb_offices)
 
