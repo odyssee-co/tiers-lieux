@@ -7,7 +7,7 @@ def get_top_50_municipalities(data_path, exclude=[]):
     Return the top 50 municipalities with the most inhabitants
     leaving every days to go to work in another communes.
     """
-    persons_df = pd.read_csv(data_path+"/processed/persons.csv", dtype=str)
+    persons_df = pd.read_feather(data_path+"/processed/persons.feather")
     persons_df = persons_df[persons_df["origin_id"]
                                     != persons_df["destination_id"]]
     #we exclude Toulouse from the list of candidates

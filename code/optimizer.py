@@ -1,43 +1,13 @@
-from itertools import combinations
-from tqdm import tqdm
 import numpy as np
 import pyomo.environ as pyo
 
 
-def eval(selectedOffices_df):
+def eval(saved_df):
     """
     Return the total saved distance if each employee chose the closest office
     amongst the subset selectedOffices.
     """
-    return selectedOffices_df.max(axis=1).sum()
-
-
-def eval_idx(saved_df, selected_offices_idx):
-    """
-    Return the total saved distance if each employee chose the closest office
-    amongst the ones given as a list of index selected_offices_idx.
-    """
-    selectedOffices_df = saved_df.iloc[:, selected_offices_idx]
-    return eval(selectedOffices_df)
-
-
-def exhaustive(saved_df, n, verbose=False):
-    """
-    Enumerate all the possible combinations of selecting n offices amongst the
-    ones in saved_df (matrix of distance saved by each user if they go to work
-    in each offices) and return the best combination in term of overall saved
-    distance.
-    """
-    nb_offices = saved_df.shape[1]
-    possibleCombinations = combinations(range(nb_offices), n)
-    best = (0, [])
-    for selectedOffices in tqdm(possibleCombinations):
-        total_saved_distance = eval_idx(saved_df, list(selectedOffices))
-        if total_saved_distance > best[0]:
-            best = (total_saved_distance, list(saved_df.columns[list(selectedOffices)]))
-            if verbose:
-                print(best)
-    return best
+    return saved_df.max(axis=1).sum()
 
 
 def n_best(saved_df, n):
