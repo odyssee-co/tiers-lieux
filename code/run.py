@@ -62,7 +62,6 @@ if __name__ == "__main__":
         saved_df = saved_df.sample(round(saved_df.shape[0]*sample_rate))
 
 
-    from IPython import embed; embed()
     max = 2*optimizer.eval(saved_df)/(1000*saved_df.shape[0]) #upper bound when all offices are available
     print("nb employee: %s"%saved_df.shape[0])
     print("max saved distance per day and per employee: %.2f km\n"%max)

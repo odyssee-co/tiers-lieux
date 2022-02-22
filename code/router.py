@@ -116,7 +116,6 @@ class Router:
                     if uses_car or car_best:
                         if ct < isochrone and b_ct - ct > min_saved:
                             saved_dist = b_cd - cd
-                            print(saved_dist)
                     #or switch to pt?
                     else:
                         if b_ct - ptt > min_saved:
