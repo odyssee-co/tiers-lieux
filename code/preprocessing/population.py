@@ -44,6 +44,7 @@ def get_insee_population(data_path, departments):
                            "IPONDI": "weight"}, inplace=True)
         df = df[["origin_id", "destination_id", "weight"]]
         df.dropna(inplace=True)
+        df = df.groupby(["origin_id", "destination_id"]).sum().reset_index()
         df["person_id"] = np.arange(len(df))
         df.reset_index(drop=True).to_feather(path)
     return df.set_index("person_id")
