@@ -73,14 +73,14 @@ if __name__ == "__main__":
         heuristic = getattr(optimizer, heuristic_dic[args.heuristic])
         print("Running %s heuristic..."%heuristic_dic[args.heuristic])
         res = heuristic(saved_df, nb_offices, verbose=verbose)
-        average = 2*res[0]/(1000*saved_df.shape[0])
+        average = 2*res[0]/(1000*nb_employees)
         print("selected offices: %s" %(res[1]))
         print("average saved distance per day and per employee: %.2f km\n"%average)
 
     if solver:
         print("Running MIP solver...")
         res = optimizer.mip(saved_df, nb_offices, verbose=verbose, solver=solver)
-        average = 2*res[0]/(1000*saved_df.shape[0])
+        average = 2*res[0]/(1000*nb_employees)
         print("selected offices: %s" %(res[1]))
         print("average saved distance per day and per employee: %.2f km\n"%average)
 
