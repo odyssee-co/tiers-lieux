@@ -49,8 +49,6 @@ if __name__ == "__main__":
     #population = pop.get_insee_population(data_path, departments)
     population = getattr(pop, f"get_{pop_src}_population")(data_path, departments)
 
-    from IPython import embed; embed()
-
     if presel_func:
         preselected_muni = getattr(preselection, f"{presel_func}")(data_path, exclude)
     else:
