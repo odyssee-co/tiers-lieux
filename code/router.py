@@ -76,8 +76,7 @@ class Router:
         return routed_df
 
 
-    def get_saved_distance(self, use_modal_share=False, min_saved=10,
-                            isochrone=0, exclude=[]):
+    def get_saved_distance(self, min_saved=10, isochrone=0, exclude=[]):
         """
         Return a dataframe containing for each employee, the time he would save working
         in each office (0 if the saved time if negative or inferior to min_saved).

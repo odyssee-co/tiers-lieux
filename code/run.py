@@ -37,7 +37,7 @@ if __name__ == "__main__":
     pop_src = args.pop
     presel_func = args.pre
 
-    departments = ["09", "11", "31", "32", "81", "82"]
+    departments = ["09", "11", "31", "32", "81", "82"] #pop 2 748 873 
     matsim_conf = "matsim-conf/toulouse_config.xml"
     exclude = ["31555"]
 
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     #preselected_muni = preselection.get_top_50_municipalities(data_path, exclude=exclude)
     suffix = f"_iso{isochrone}_min{min_saved}_{presel_func}"
     r = router.Router(data_path, suffix, population, departments, matsim_conf, preselection=preselected_muni)
-    saved_df_w = r.get_saved_distance(min_saved, isochrone=isochrone, min_saved=min_saved, exclude=exclude)
+    saved_df_w = r.get_saved_distance(isochrone=isochrone, min_saved=min_saved, exclude=exclude)
     if sample_rate < 1:
         saved_df_w = saved_df_w.sample(round(saved_df_w.shape[0]*sample_rate))
     saved_df = saved_df_w.drop("weight", axis=1)
