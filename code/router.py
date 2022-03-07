@@ -15,7 +15,7 @@ class Router:
     def __init__(self, cfg):
         self.cfg = cfg
         self.data_path = os.path.abspath(cfg["data_path"])
-        self.processed_path = cfg["processed_path"]
+        self.processed_path = os.path.abspath(cfg["processed_path"])
 
     def compute_request(self):
         path = f"{self.processed_path}/request.csv"
@@ -89,7 +89,6 @@ class Router:
 
         exclude = self.cfg["exclude"]
         path_saved = f"{self.processed_path}/saved{suffix}.feather"
-        print(path_saved)
         if os.path.exists(path_saved):
             print("Loading saved distances matrix...")
             saved_df = pd.read_feather(path_saved).set_index("person_id")

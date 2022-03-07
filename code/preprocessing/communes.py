@@ -26,10 +26,16 @@ def get_communes(data_path, departments=None):
     """
     print("Processing municipalities...")
     df_communes = gpd.read_file(data_path+"/iris/communes-20210101.shp", dtype={"insee":str})
+    df_communes = df_communes[["nom", "insee", "geometry"]]
+    df_communes.geometry = df_communes.geometry.to_crs(2154)
+    arn_path = data_path+"/arrondissements/arrondissements-municipaux-20160128.shp"
+    df_arrondissements = gpd.read_file(arn_path, dtype={"insee":str})
+    df_arrondissements = df_arrondissements[["nom", "insee", "geometry"]]
+    df_arrondissements.geometry = df_arrondissements.geometry.to_crs(2154)
+    df_communes = df_communes.append(df_arrondissements)
     if departments:
         df_communes["department"] = df_communes["insee"].str[:2]
         df_communes = df_communes[df_communes["department"].isin(departments)]
-    df_communes.geometry = df_communes.geometry.to_crs(2154)
     df_communes["x"] = df_communes.geometry.centroid.x
     df_communes["y"] = df_communes.geometry.centroid.y
     df_communes = df_communes[["nom","insee", "geometry","x","y"]]
