@@ -24,9 +24,6 @@ def get_communes(data_path, departments=None):
     return geo dataFrame with communes names, ids, geometry, and coordinates (x,y)
     df_communes: nom, commune_id, geometry, x, y
     """
-    path = f"{data_path}/processed/communes.gpkg"
-    if os.path.isfile(path):
-        return gpd.read_file(path, dtype={"commune_id":str})
     print("Processing municipalities...")
     df_communes = gpd.read_file(data_path+"/iris/communes-20210101.shp", dtype={"insee":str})
     if departments:
@@ -37,7 +34,6 @@ def get_communes(data_path, departments=None):
     df_communes["y"] = df_communes.geometry.centroid.y
     df_communes = df_communes[["nom","insee", "geometry","x","y"]]
     df_communes = df_communes.rename(columns={"insee": "commune_id"})
-    df_communes.to_file(path, driver = "GPKG")
     return df_communes
 
 

@@ -3,61 +3,53 @@ import router
 import optimizer
 import os
 import argparse
-import visualization
+import preprocessing.communes as com
 import preprocessing.population as pop
-import preselection
-
+import yaml
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the optimizer")
-    parser.add_argument("--data_path", default="../data", help="path to the data")
+    parser.add_argument("--conf", default="conf.yml", help="path to the configuraiton file")
+    parser.add_argument("--verbose", "-v", action="store_true", help="verbose mode")
     parser.add_argument("--nb_offices", "-n", type=int, default=10,
                         help="number of offices")
-    parser.add_argument("--verbose", "-v", action="store_true", help="verbose mode")
     parser.add_argument("--sample", "-s", type=float, default=1, help="sample rate")
-    parser.add_argument("--min", "-m", type=float, default=10, help="Minimum saved \
-                        time (in min) for an employee to choose an office")
-    parser.add_argument("--isochrone", "-i", type=float, default=15, help="\
-                        Maximum travel time (in min) for an employee to consider \
-                        this office")
     parser.add_argument("--solver", type=str, help="use mip solver (glpk|cbc)")
-    parser.add_argument("--pop", type=str, default="insee", help="population source (insee|hr)")
     parser.add_argument("--pre", type=str, default=None, help="preselection function")
-    parser.add_argument("--show", action="store_true", help="show the data")
     parser.add_argument("--heuristic", type=str, help="use heuristic search (rand, rand_w, evol)")
+
     args=parser.parse_args()
-    nb_offices = args.nb_offices
-    data_path = os.path.abspath(args.data_path)
+    yml_path = args.conf
     verbose = args.verbose
-    solver = args.solver
+    nb_offices = args.nb_offices
     sample_rate = args.sample
     solver = args.solver
-    min_saved=args.min
-    isochrone = args.isochrone
-    pop_src = args.pop
     presel_func = args.pre
 
-    departments = ["09", "11", "31", "32", "81", "82"] #pop 2 748 873 
-    matsim_conf = "matsim-conf/toulouse_config.xml"
-    exclude = ["31555"]
+    with open(yml_path, "r") as yml_file:
+        cfg = yaml.safe_load(yml_file)
+    data_path = os.path.abspath(cfg["data_path"])
+    processed_path = os.path.abspath(cfg["processed_path"])
+    departments = cfg["departments"]
 
-
-    processed_path = data_path+"/processed"
     if not os.path.isdir(processed_path):
         os.mkdir(processed_path)
 
-    #population = pop.get_insee_population(data_path, departments)
-    population = getattr(pop, f"get_{pop_src}_population")(data_path, departments)
+    communes_path = f"{processed_path}/communes.gpkg"
+    if not os.path.isfile(communes_path):
+        df_communes = com.get_communes(data_path, departments)
+        df_communes.to_file(communes_path, driver = "GPKG")
 
-    if presel_func:
-        preselected_muni = getattr(preselection, f"{presel_func}")(data_path, exclude)
-    else:
-        preselected_muni = None
+    pop_path = f"{processed_path}/persons.feather"
+    if not os.path.isfile(pop_path):
+        pop_src = cfg["pop"]
+        df_pop = getattr(pop, f"get_{pop_src}_population")(data_path, departments)
+        df_pop.reset_index(drop=True).to_feather(pop_path)
 
     #preselected_muni = preselection.get_top_50_municipalities(data_path, exclude=exclude)
-    suffix = f"_iso{isochrone}_min{min_saved}_{presel_func}"
-    r = router.Router(data_path, suffix, population, departments, matsim_conf, preselection=preselected_muni)
-    saved_df_w = r.get_saved_distance(isochrone=isochrone, min_saved=min_saved, exclude=exclude)
+    r = router.Router(cfg)
+    saved_df_w = r.get_saved_distance(presel_func)
+
     if sample_rate < 1:
         saved_df_w = saved_df_w.sample(round(saved_df_w.shape[0]*sample_rate))
     saved_df = saved_df_w.drop("weight", axis=1)
@@ -83,6 +75,3 @@ if __name__ == "__main__":
         average = 2*res[0]/(1000*nb_employees)
         print("selected offices: %s" %(res[1]))
         print("average saved distance per day and per employee: %.2f km\n"%average)
-
-    if args.show:
-        visualization.viz(res)

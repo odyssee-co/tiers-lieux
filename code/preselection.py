@@ -2,12 +2,12 @@ import pandas as pd
 import geopandas as gpd
 from esda.adbscan import ADBSCAN
 
-def get_top_50_municipalities(data_path, exclude=[]):
+def top_50_muni(processed_path, exclude=[]):
     """
     Return the top 50 municipalities with the most inhabitants
     leaving every days to go to work in another communes.
     """
-    persons_df = pd.read_feather(data_path+"/processed/persons.feather")
+    persons_df = pd.read_feather(processed_path+"/persons.feather")
     persons_df = persons_df[persons_df["origin_id"]
                                     != persons_df["destination_id"]]
     #we exclude Toulouse from the list of candidates
@@ -17,12 +17,12 @@ def get_top_50_municipalities(data_path, exclude=[]):
     return top_50
 
 
-def get_top_50_clusters(data_path, eps=5000, min_samples=100):
+def top_50_clusters(processed_path, eps=5000, min_samples=100):
     """
     Return the top 50 adbscan cluster centroids with the most inhabitants
     leaving every days to go to work in another communes.
     """
-    persons_df = pd.read_csv(data_path+"/processed/persons.csv", dtype=str)
+    persons_df = pd.read_csv(processed_path+"/persons.csv", dtype=str)
     persons_df = persons_df[persons_df["origin_id"].astype(str)
                                     != persons_df["destination_id"].astype(str)]
     geometry=gpd.points_from_xy(persons_df.origin_x,

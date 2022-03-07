@@ -3,29 +3,27 @@ import shutil
 import os
 import pandas as pd
 from pathlib import Path
-import preprocessing.communes as communes
+import preselection
 import tqdm
+import geopandas as gpd
 
 
 class Router:
 
     jar_file = "flow-1.2.0.jar"
 
-    def __init__(self, data_path, suffix, population, departments, matsim_conf, preselection=None):
-        self.data_path = data_path
-        self.population = population
-        self.departments = departments
-        self.preselection = preselection
-        self.matsim_conf = matsim_conf
-        self.suffix_dep = str.join('-', departments)
-        self.suffix = f"{suffix}_{self.suffix_dep}"
+    def __init__(self, cfg):
+        self.cfg = cfg
+        self.data_path = os.path.abspath(cfg["data_path"])
+        self.processed_path = cfg["processed_path"]
 
     def compute_request(self):
-        path = f"{self.data_path}/processed/request_{self.suffix_dep}.csv"
+        path = f"{self.processed_path}/request.csv"
         if not os.path.isfile(path):
             print("Computing request...")
-            municipalities_df = communes.get_communes(self.data_path,
-                                                      departments=self.departments)
+            municipalities_df = gpd.read_file(f"{self.processed_path}/communes.gpkg",
+                                              dtype={"commune_id":str})
+
             #origins_df = municipalities_df[municipalities_df.commune_id
             #                           .isin(self.population.origin_id.unique())].copy()
             origins_df = municipalities_df.copy()
@@ -51,9 +49,9 @@ class Router:
         Call MATSim router
         person_id;office_id;origin_x;origin_y;destination_x;destination_y
         """
-        routed_path = f"{self.data_path}/processed/routed_{self.suffix_dep}.csv"
+        routed_path = f"{self.processed_path}/routed.csv"
         if not os.path.isfile(routed_path):
-            req_path = f"{self.data_path}/processed/request_{self._suffix_dep}.csv"
+            req_path = f"{self.processed_path}/request.csv"
             if not os.path.isfile(req_path):
                 self.compute_request()
             print("Routing...")
@@ -62,7 +60,7 @@ class Router:
                 "-cp", f"{self.data_path}/{self.jar_file}",
                 #"-Xmx14G",
                 "org.eqasim.odyssee.RunBatchRouting",
-                "--config-path", f"{self.data_path}/{self.matsim_conf}",
+                "--config-path", os.path.abspath(self.cfg["matsim_conf"]),
                 "--input-path", req_path,
                 "--output-path", routed_path]
             sp.check_call(command, cwd=Path(self.data_path).parent)
@@ -76,33 +74,42 @@ class Router:
         return routed_df
 
 
-    def get_saved_distance(self, min_saved=10, isochrone=0, exclude=[]):
+    def get_saved_distance(self, presel_func):
         """
         Return a dataframe containing for each employee, the time he would save working
         in each office (0 if the saved time if negative or inferior to min_saved).
 
         """
+
+        isochrone = self.cfg["isochrone"]
+        min_saved=self.cfg["min"]
+        suffix = f"_iso{isochrone}_min{min_saved}_{presel_func}"
         isochrone *= 60
         min_saved *= 60
-        path_saved = f"{self.data_path}/processed/saved{self.suffix}.feather"
+
+        exclude = self.cfg["exclude"]
+        path_saved = f"{self.processed_path}/saved{suffix}.feather"
+        print(path_saved)
         if os.path.exists(path_saved):
             print("Loading saved distances matrix...")
             saved_df = pd.read_feather(path_saved).set_index("person_id")
         else:
             print("Processing saved distances matrix")
             routed_df = self.get_routed()
-            routed_df = routed_df[routed_df["origin_id"].isin(self.population.origin_id)]
-            if self.preselection:
-                offices_id = self.preselection
+
+            population = pd.read_feather(f"{self.processed_path}/persons.feather")
+            routed_df = routed_df[routed_df["origin_id"].isin(population.origin_id)]
+
+            if presel_func:
+                offices_id = getattr(preselection, f"{presel_func}")(self.processed_path, exclude)
             else:
                 offices_id = routed_df["destination_id"].unique()
             routed_df.set_index(["origin_id", "destination_id"], inplace=True)
 
             #calculate baseline car distance and check if user uses car anyway
             saved_df = pd.DataFrame()
-            #self.population = self.population.sample(100) #to_remove
-            for id, row in tqdm.tqdm(self.population.iterrows(),
-                                     total=self.population.shape[0]):
+            for id, row in tqdm.tqdm(population.iterrows(),
+                                     total=population.shape[0]):
                 origin, reg_office, weight = row
                 b_ct, b_cd, b_ptt, b_ptd = routed_df.loc[origin, reg_office]
                 saved = {"weight":weight}
@@ -125,6 +132,6 @@ class Router:
             saved_df.index.names = ["person_id"]
             saved_df.reset_index().to_feather(path_saved)
 
-        if not self.preselection:
+        if not presel_func:
             saved_df.drop(columns=exclude, inplace=True)
         return saved_df
