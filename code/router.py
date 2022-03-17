@@ -58,11 +58,12 @@ class Router:
             command = [
                 shutil.which("java"),
                 "-cp", f"{self.data_path}/{self.jar_file}",
-                #"-Xmx14G",
+                "-Xmx28G",
                 "org.eqasim.odyssee.RunBatchRouting",
                 "--config-path", os.path.abspath(self.cfg["matsim_conf"]),
                 "--input-path", req_path,
                 "--output-path", routed_path]
+
             sp.check_call(command, cwd=Path(self.data_path).parent)
         routed_df = pd.read_csv(routed_path, sep=";", dtype={"person_id":str,
                                                              "office_id":str,

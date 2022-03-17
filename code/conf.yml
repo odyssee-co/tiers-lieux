@@ -4,7 +4,7 @@ processed_path : ../data/processed_idf
 departments : ["75", "77", "78", "91", "92", "93", "94", "95"] #pop 12 262 544
 exclude : []
 
-matsim_conf : ../data/matsim-conf/toulouse_config.xml
+matsim_conf : ../data/matsim-conf/ile_de_france_config.xml
 
 # population source (insee | hr)
 pop : insee
