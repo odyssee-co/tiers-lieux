@@ -1,0 +1,16 @@
+data_path : ../data
+processed_path : ../data/processed_toulouse
+
+departments : ["09", "11", "31", "32", "81", "82"] #pop 2 748 873
+exclude : ["31555"]
+
+matsim_conf : ../data/matsim-conf/toulouse_config.xml
+
+# population source (insee | hr)
+pop : insee
+
+# Maximum travel time (in min) for an employee to consider this office
+isochrone : 15
+
+# Minimum saved time (in min) for an employee to choose an office
+min : 10

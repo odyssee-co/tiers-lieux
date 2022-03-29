@@ -1,0 +1,19 @@
+data_path : ../data
+processed_path : ../data/processed_comminges
+
+municipality_file: analysis/comminges_insee.txt
+
+departments: ["31"]
+exclude : []
+
+matsim_conf : ../data/matsim-conf/toulouse_config.xml
+
+# population source (insee | hr)
+pop : insee
+
+
+# Maximum travel time (in min) for an employee to consider this office
+isochrone : 15
+
+# Minimum saved time (in min) for an employee to choose an office
+min : 10
