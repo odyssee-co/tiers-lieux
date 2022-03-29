@@ -32,18 +32,30 @@ if __name__ == "__main__":
     processed_path = os.path.abspath(cfg["processed_path"])
     departments = cfg["departments"]
 
+    municipalities_list = None
+    try:
+        municipalities_list = []
+        municipality_file = cfg["municipality_file"]
+        with open(municipality_file) as f:
+            for l in f:
+                municipalities_list.append(l.strip())
+    except KeyError:
+        pass
+
     if not os.path.isdir(processed_path):
         os.mkdir(processed_path)
 
     communes_path = f"{processed_path}/communes.gpkg"
     if not os.path.isfile(communes_path):
-        df_communes = com.get_communes(data_path, departments)
+        df_communes = com.get_communes(data_path, municipalities=municipalities_list,
+                                       departments=departments)
         df_communes.to_file(communes_path, driver = "GPKG")
 
     pop_path = f"{processed_path}/persons.feather"
     if not os.path.isfile(pop_path):
         pop_src = cfg["pop"]
-        df_pop = getattr(pop, f"get_{pop_src}_population")(data_path, departments)
+        df_pop = getattr(pop, f"get_{pop_src}_population")(data_path,
+                    departments=departments, municipalities=municipalities_list)
         df_pop.reset_index(drop=True).to_feather(pop_path)
 
     #preselected_muni = preselection.get_top_50_municipalities(data_path, exclude=exclude)

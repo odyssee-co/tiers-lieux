@@ -19,7 +19,7 @@ def get_coord(df_persons, communes):
     #df_persons.to_csv(data_path+"/processed/od_al.csv", sep=";", index=False)
     return df_persons
 
-def get_communes(data_path, departments=None):
+def get_communes(data_path, municipalities=None, departments=[]):
     """
     return geo dataFrame with communes names, ids, geometry, and coordinates (x,y)
     df_communes: nom, commune_id, geometry, x, y
@@ -33,9 +33,10 @@ def get_communes(data_path, departments=None):
     df_arrondissements = df_arrondissements[["nom", "insee", "geometry"]]
     df_arrondissements.geometry = df_arrondissements.geometry.to_crs(2154)
     df_communes = df_communes.append(df_arrondissements)
-    if departments:
-        df_communes["department"] = df_communes["insee"].str[:2]
-        df_communes = df_communes[df_communes["department"].isin(departments)]
+    if municipalities:
+        df_communes = df_communes[df_communes["insee"].isin(municipalities)]
+    df_communes["department"] = df_communes["insee"].str[:2]
+    df_communes = df_communes[df_communes["department"].isin(departments)]
     df_communes["x"] = df_communes.geometry.centroid.x
     df_communes["y"] = df_communes.geometry.centroid.y
     df_communes = df_communes[["nom","insee", "geometry","x","y"]]

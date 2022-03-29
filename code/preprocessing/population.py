@@ -9,7 +9,7 @@ def get_hr_population(data_path, departments):
     df["weight"] = 1
     return df.set_index("person_id")
 
-def get_insee_population(data_path, departments):
+def get_insee_population(data_path, departments=[], municipalities=None):
     print("Computing insee population...")
     columns = ["COMMUNE", "ARM", "DCLT", "CS1", "IPONDI", "TRANS", "VOIT"]
     dtype = {"COMMUNE":str, "ARM":str, "DCLT":str, "CS1":str, "IPONDI":float,
@@ -20,6 +20,10 @@ def get_insee_population(data_path, departments):
 
     df = df[df["COMMUNE"].str[:2].isin(departments)]
     df = df[df["DCLT"].str[:2].isin(departments)]
+
+    if municipalities:
+        df = df[df["COMMUNE"].isin(municipalities)]
+
     df.COMMUNE.where(~df.COMMUNE.isin(["75056", "69123", "13055"]),
                      df.ARM,
                      inplace=True)
