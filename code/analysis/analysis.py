@@ -11,6 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import yaml
 import dataframe_image as dfi
+import osmnx as ox
 
 mpl.rcParams['figure.figsize'] = [15, 15]
 
@@ -94,23 +95,41 @@ dfi.export(df[["label", "attractiveness", "saved_distance_km",
             "saved_distance_per_person_km"]], f"{processed_path}/tab-iso{iso}.png")
 
 
+#base map
 cmap = mpl.cm.Blues(np.linspace(0,1,20))
 cmap = mpl.colors.ListedColormap(cmap[5:,:-1])
 m = municipalities[municipalities["density"]!=0]
 #ax = m.plot(column="density", cmap=cmap, legend=True, scheme='user_defined', classification_kwds={'bins':[10,100,500,2000]})
-ax = m.plot(column="density", cmap=cmap, legend=True, scheme="JenksCaspall", k=6)
+ax = m.plot(column="density", cmap=cmap, legend=True, scheme="JenksCaspall", k=6, zorder=1)
 ax.get_legend().set_title("Population")
-departments.plot(ax=ax, facecolor='none', edgecolor='black', linewidth=1)
+departments.plot(ax=ax, facecolor='none', edgecolor='black', linewidth=1, zorder=2)
 
+#road network
+path = f"{processed_path}/graph.graphml"
+if os.path.exists(path):
+    print("Loading road network")
+    graph = ox.load_graphml(path)
+else:
+    print("Downloading road network")
+    area = m.dissolve().to_crs(4326)
+    cf = '["highway"~"motorway|trunk|primary|secondary"]'
+    graph = ox.graph_from_polygon(area.geometry[0], network_type="drive", retain_all=True, truncate_by_edge=True, clean_periphery=True, custom_filter=cf)
+    graph = ox.projection.project_graph(graph, to_crs=2154)
+    ox.save_graphml(graph, filepath=path)
+nodes, roads = ox.graph_to_gdfs(graph)
+roads[roads.highway!="secondary"].plot(ax=ax, color="white", linewidth=1, alpha=0.4, zorder=3)
+roads[roads.highway=="secondary"].plot(ax=ax, color="white", linewidth=0.5, alpha=0.4, zorder=4)
+
+#municipalities
 if presel_func:
     preselected_muni = municipalities[municipalities["commune_id"].isin(saved_df.columns
     )].copy()
     preselected_muni["geometry"] = preselected_muni.centroid
-    preselected_muni.plot(ax=ax, color="orange", linewidth=3)
-
+    preselected_muni.plot(ax=ax, color="orange", linewidth=3, zorder=10)
 chosen_muni = municipalities[municipalities["commune_id"].isin(res[1])].copy()
 chosen_muni["geometry"] = chosen_muni.centroid
-chosen_muni.plot(ax=ax, color="red", linewidth=5)
+chosen_muni.plot(ax=ax, color="red", linewidth=5, zorder=20)
+
 plt.axis('off')
 plt.savefig(f"{processed_path}/map_iso{iso}.png", bbox_inches='tight')
 
