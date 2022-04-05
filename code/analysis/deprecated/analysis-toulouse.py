@@ -14,18 +14,12 @@ import dataframe_image as dfi
 
 mpl.rcParams['figure.figsize'] = [15, 15]
 
-conf_file = sys.argv[1]
-with open(conf_file, "r") as yml_file:
+with open("../data/conf-toulouse.yml", "r") as yml_file:
         cfg = yaml.safe_load(yml_file)
 data_path = os.path.abspath(cfg["data_path"])
 processed_path = os.path.abspath(cfg["processed_path"])
 departments = cfg["departments"]
 iso = cfg["isochrone"]
-presel_func = None
-try:
-    presel_func = cfg["preselection"]
-except KeyError:
-    pass
 
 df_names = pd.read_excel(f"{data_path}/reference_IRIS_geo2017.xls", skiprows = 5)
 df_names["municipality_id"] = df_names["CODE_IRIS"].astype(str).str[:5]
@@ -35,7 +29,7 @@ df_names = df_names.drop_duplicates("municipality_id")
 
 
 r = router.Router(cfg)
-saved_df_w = r.get_saved_distance(presel_func)
+saved_df_w = r.get_saved_distance("top_50_muni")
 saved_df = saved_df_w.drop("weight", axis=1)
 weight = saved_df_w["weight"]
 nb_persons = weight.sum()
@@ -58,10 +52,12 @@ municipalities = pd.merge(municipalities, density_df, on="commune_id",
                             how="left").fillna(0)
 municipalities["density"] = municipalities["density"].astype(int)
 
-solver_res_path = f"{processed_path}/solver_res_iso{iso}.txt"
-with open(solver_res_path) as f:
-    l = f.readline()
-    res = eval(l.strip())
+if iso==15:
+    res = (1985993614.156997, ['82121', '81004', '31395', '31149', '31113', '31561', '31187', '31118', '81271', '31248'])
+if iso==30:
+    res = (2813509837.849502, ['82121', '81004', '81065', '31395', '31561', '31187', '31118', '32160', '81271', '31248'])
+if iso==60:
+    res = (3082042712.2676554, ['82121', '81004', '31395', '31561', '31187', '31118', '11076', '32160', '81271', '31248'])
 
 saved_df_res = saved_df[res[1]].copy()
 max_saved_per_person = pd.concat({"idxmax":saved_df_res.idxmax(axis=1), "max":saved_df_res.max(axis=1)}, axis=1)
@@ -94,6 +90,13 @@ dfi.export(df[["label", "attractiveness", "saved_distance_km",
             "saved_distance_per_person_km"]], f"{processed_path}/tab-iso{iso}.png")
 
 
+preselected_muni = municipalities[municipalities["commune_id"].isin(saved_df.columns
+)].copy()
+preselected_muni["geometry"] = preselected_muni.centroid
+chosen_muni = municipalities[municipalities["commune_id"].isin(res[1])].copy()
+chosen_muni["geometry"] = chosen_muni.centroid
+
+
 cmap = mpl.cm.Blues(np.linspace(0,1,20))
 cmap = mpl.colors.ListedColormap(cmap[5:,:-1])
 m = municipalities[municipalities["density"]!=0]
@@ -101,15 +104,7 @@ m = municipalities[municipalities["density"]!=0]
 ax = m.plot(column="density", cmap=cmap, legend=True, scheme="JenksCaspall", k=6)
 ax.get_legend().set_title("Population")
 departments.plot(ax=ax, facecolor='none', edgecolor='black', linewidth=1)
-
-if presel_func:
-    preselected_muni = municipalities[municipalities["commune_id"].isin(saved_df.columns
-    )].copy()
-    preselected_muni["geometry"] = preselected_muni.centroid
-    preselected_muni.plot(ax=ax, color="orange", linewidth=3)
-
-chosen_muni = municipalities[municipalities["commune_id"].isin(res[1])].copy()
-chosen_muni["geometry"] = chosen_muni.centroid
+preselected_muni.plot(ax=ax, color="orange", linewidth=3)
 chosen_muni.plot(ax=ax, color="red", linewidth=5)
 plt.axis('off')
 plt.savefig(f"{processed_path}/map_iso{iso}.png", bbox_inches='tight')

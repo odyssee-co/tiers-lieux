@@ -14,18 +14,11 @@ import dataframe_image as dfi
 
 mpl.rcParams['figure.figsize'] = [15, 15]
 
-conf_file = sys.argv[1]
-with open(conf_file, "r") as yml_file:
+with open("../data/conf-ile-de-france.yml", "r") as yml_file:
         cfg = yaml.safe_load(yml_file)
 data_path = os.path.abspath(cfg["data_path"])
 processed_path = os.path.abspath(cfg["processed_path"])
 departments = cfg["departments"]
-iso = cfg["isochrone"]
-presel_func = None
-try:
-    presel_func = cfg["preselection"]
-except KeyError:
-    pass
 
 df_names = pd.read_excel(f"{data_path}/reference_IRIS_geo2017.xls", skiprows = 5)
 df_names["municipality_id"] = df_names["CODE_IRIS"].astype(str).str[:5]
@@ -35,7 +28,7 @@ df_names = df_names.drop_duplicates("municipality_id")
 
 
 r = router.Router(cfg)
-saved_df_w = r.get_saved_distance(presel_func)
+saved_df_w = r.get_saved_distance("top_50_muni")
 saved_df = saved_df_w.drop("weight", axis=1)
 weight = saved_df_w["weight"]
 nb_persons = weight.sum()
@@ -58,10 +51,7 @@ municipalities = pd.merge(municipalities, density_df, on="commune_id",
                             how="left").fillna(0)
 municipalities["density"] = municipalities["density"].astype(int)
 
-solver_res_path = f"{processed_path}/solver_res_iso{iso}.txt"
-with open(solver_res_path) as f:
-    l = f.readline()
-    res = eval(l.strip())
+res = (6885559056.596714, ['92012', '78646', '91174', '95018', '91377', '94046', '95127', '93051', '77288', '93029'])
 
 saved_df_res = saved_df[res[1]].copy()
 max_saved_per_person = pd.concat({"idxmax":saved_df_res.idxmax(axis=1), "max":saved_df_res.max(axis=1)}, axis=1)
@@ -91,7 +81,14 @@ df = df.append(total, ignore_index=True)
 df["attractiveness"] = df["attractiveness"].astype(int)
 df["saved_distance_km"] = df["saved_distance_km"].astype(int)
 dfi.export(df[["label", "attractiveness", "saved_distance_km",
-            "saved_distance_per_person_km"]], f"{processed_path}/tab-iso{iso}.png")
+            "saved_distance_per_person_km"]], f"{processed_path}/tab.png")
+
+
+preselected_muni = municipalities[municipalities["commune_id"].isin(saved_df.columns
+)].copy()
+preselected_muni["geometry"] = preselected_muni.centroid
+chosen_muni = municipalities[municipalities["commune_id"].isin(res[1])].copy()
+chosen_muni["geometry"] = chosen_muni.centroid
 
 
 cmap = mpl.cm.Blues(np.linspace(0,1,20))
@@ -101,43 +98,7 @@ m = municipalities[municipalities["density"]!=0]
 ax = m.plot(column="density", cmap=cmap, legend=True, scheme="JenksCaspall", k=6)
 ax.get_legend().set_title("Population")
 departments.plot(ax=ax, facecolor='none', edgecolor='black', linewidth=1)
-
-if presel_func:
-    preselected_muni = municipalities[municipalities["commune_id"].isin(saved_df.columns
-    )].copy()
-    preselected_muni["geometry"] = preselected_muni.centroid
-    preselected_muni.plot(ax=ax, color="orange", linewidth=3)
-
-chosen_muni = municipalities[municipalities["commune_id"].isin(res[1])].copy()
-chosen_muni["geometry"] = chosen_muni.centroid
+preselected_muni.plot(ax=ax, color="orange", linewidth=3)
 chosen_muni.plot(ax=ax, color="red", linewidth=5)
 plt.axis('off')
-plt.savefig(f"{processed_path}/map_iso{iso}.png", bbox_inches='tight')
-
-"""
-# Plot labels
-old = ["31555", "31467", "31424", "31107", "82121", "31395", "31451", "31033", "81004", "81271", "32160"]
-old_chosen_muni = municipalities[municipalities["commune_id"].isin(old)].copy()
-old_chosen_muni["geometry"] = old_chosen_muni.centroid
-ax = departments.plot(facecolor='none', edgecolor='black', linewidth=1)
-chosen_muni.plot(ax=ax, color="red", linewidth=12)
-old_chosen_muni.plot(ax=ax, color="blue", linewidth=4)
-all_muni = pd.merge(chosen_muni, old_chosen_muni, on=["commune_id", "geometry"], how="outer")
-all_muni = pd.merge(all_muni, df_names.rename(columns={"municipality_id":"commune_id"}), on="commune_id", how="left")
-for x, y, label in zip(all_muni.geometry.x, all_muni.geometry.y, all_muni.label):
-    ax.annotate(label, xy=(x, y), xytext=(3, 3), textcoords="offset points")
-
-
-# Plot saved distance in function of nb offices
-
-saved_distance = []
-for i in results:
-    saved_distance.append(int(i[0]))
-saved_distance = np.array(saved_distance)
-saved_distance = saved_distance /1000000
-mpl.rcParams['figure.figsize'] = [8, 5.5]
-plt.plot(range(2, len(saved_distance)+2),saved_distance)
-plt.xlabel('Number of selected offices $n$')
-plt.ylabel('Saved distance [1000 km]')
-plt.grid()
-"""
+plt.savefig(f"{processed_path}/map.png", bbox_inches='tight')

@@ -15,7 +15,6 @@ if __name__ == "__main__":
                         help="number of offices")
     parser.add_argument("--sample", "-s", type=float, default=1, help="sample rate")
     parser.add_argument("--solver", type=str, help="use mip solver (glpk|cbc)")
-    parser.add_argument("--pre", type=str, default=None, help="preselection function")
     parser.add_argument("--heuristic", type=str, help="use heuristic search (rand, rand_w, evol)")
 
     args=parser.parse_args()
@@ -24,13 +23,18 @@ if __name__ == "__main__":
     nb_offices = args.nb_offices
     sample_rate = args.sample
     solver = args.solver
-    presel_func = args.pre
 
     with open(yml_path, "r") as yml_file:
         cfg = yaml.safe_load(yml_file)
     data_path = os.path.abspath(cfg["data_path"])
     processed_path = os.path.abspath(cfg["processed_path"])
     departments = cfg["departments"]
+
+    presel_func = None
+    try:
+        presel_func = cfg["preselection"]
+    except KeyError:
+        pass
 
     municipalities_list = None
     try:

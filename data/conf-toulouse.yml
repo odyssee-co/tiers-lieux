@@ -10,7 +10,9 @@ matsim_conf : ../data/matsim-conf/toulouse_config.xml
 pop : insee
 
 # Maximum travel time (in min) for an employee to consider this office
-isochrone : 15
+isochrone : 60
 
 # Minimum saved time (in min) for an employee to choose an office
 min : 10
+
+preselection: top_50_muni

@@ -7,7 +7,6 @@ import geopandas as gpd
 import pandas as pd
 import router
 import matplotlib as mpl
-import numpy as np
 import matplotlib.pyplot as plt
 import yaml
 mpl.rcParams['figure.figsize'] = [20, 20]
@@ -17,7 +16,7 @@ res = []
 for l in res_file:
     res.append(eval(l.strip()))
 
-with open("conf.yml", "r") as yml_file:
+with open("../data/conf-toulouse.yml", "r") as yml_file:
         cfg = yaml.safe_load(yml_file)
 data_path = os.path.abspath(cfg["data_path"])
 processed_path = os.path.abspath(cfg["processed_path"])
@@ -54,7 +53,8 @@ municipalities = pd.merge(municipalities, density_df, on="commune_id",
                             how="left").fillna(0)
 municipalities["density"] = municipalities["density"].astype(int)
 
-res_opti = (6885559056.596714, ['92012', '78646', '91174', '95018', '91377', '94046', '95127', '93051', '77288', '93029'])
+#res_opti = (6885559056.596714, ['92012', '78646', '91174', '95018', '91377', '94046', '95127', '93051', '77288', '93029'])
+res_opti = (1985993614.156997, ['82121', '81004', '31395', '31149', '31113', '31561', '31187', '31118', '81271', '31248'])
 
 
 optimal_muni = municipalities[municipalities["commune_id"].isin(res_opti[1])].copy()
@@ -77,12 +77,12 @@ for r in res:
 optimal_muni = municipalities[municipalities["commune_id"].isin(res_opti[1])].copy()
 optimal_muni["geometry"] = optimal_muni.centroid
 ax = departments.plot(facecolor='none', edgecolor='black', linewidth=1)
-optimal_muni.plot(ax=ax, color="red", linewidth=1)
+optimal_muni.plot(ax=ax, color="red", linewidth=5)
 n = len(res)
 for r in res:
     id = round(r[0]/1e3)
     chosen_muni = municipalities[municipalities["commune_id"].isin(r[1])].copy()
     chosen_muni["geometry"] = chosen_muni.centroid
-    chosen_muni.plot(ax=ax, color="blue", linewidth=1, alpha=1/n)
+    chosen_muni.plot(ax=ax, color="blue", linewidth=3, alpha=2/n)
     ax.set_axis_off()
-plt.show()
+plt.savefig(f"{processed_path}/multiple_map.png", bbox_inches='tight')

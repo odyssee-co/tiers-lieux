@@ -6,9 +6,7 @@ sys.path.append("/home/matt/git/tiers-lieux/code")
 import geopandas as gpd
 import pandas as pd
 import router
-import optimizer
 import matplotlib as mpl
-import geoplot as gplt
 import numpy as np
 import matplotlib.pyplot as plt
 import yaml
@@ -104,6 +102,7 @@ plt.show()
 
 
 
+"""
 # In[120]:
 
 
@@ -166,12 +165,4 @@ plt.plot(range(2, len(saved_distance)+2),saved_distance)
 plt.xlabel('Number of selected offices $n$')
 plt.ylabel('Saved distance [1000 km]')
 plt.grid()
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
+"""
