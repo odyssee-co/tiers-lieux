@@ -82,8 +82,8 @@ if __name__ == "__main__":
         solver_res_path = f"{processed_path}/solver_res_iso{cfg['isochrone']}.txt"
         print("Running MIP solver...")
         res = optimizer.mip(saved_df, nb_offices, verbose=verbose, solver=solver)
-        with open(solver_res_path) as f:
-            f.write(str(res))
+        with open(solver_res_path, "a") as f:
+            f.write(f"{res}\n")
         average = 2*res[0]/(1000*nb_employees)
         print("selected offices: %s" %(res[1]))
         print("average saved distance per day and per employee: %.2f km\n"%average)
