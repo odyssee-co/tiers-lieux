@@ -2,6 +2,7 @@
 # coding: utf-8
 
 import sys, os
+import utils
 sys.path.append("/home/matt/git/tiers-lieux/code")
 import geopandas as gpd
 import pandas as pd
@@ -43,6 +44,9 @@ nb_persons = weight.sum()
 
 
 municipalities = gpd.read_file(f"{processed_path}/communes.gpkg")
+municipalities_list = utils.load_muni_list(cfg)
+if municipalities_list:
+    municipalities = municipalities[municipalities["insee"].isin(municipalities)]
 municipalities["department"] = municipalities["commune_id"].str[:2]
 departments = municipalities.dissolve("department").reset_index()
 dep_name = pd.read_csv(f"{data_path}/departements-france.csv")

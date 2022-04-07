@@ -6,6 +6,7 @@ import argparse
 import preprocessing.communes as com
 import preprocessing.population as pop
 import yaml
+import utils
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the optimizer")
@@ -36,15 +37,7 @@ if __name__ == "__main__":
     except KeyError:
         pass
 
-    municipalities_list = None
-    try:
-        municipalities_list = []
-        municipality_file = cfg["municipality_file"]
-        with open(municipality_file) as f:
-            for l in f:
-                municipalities_list.append(l.strip())
-    except KeyError:
-        pass
+    municipalities_list = utils.load_muni_list(cfg)
 
     if not os.path.isdir(processed_path):
         os.mkdir(processed_path)
