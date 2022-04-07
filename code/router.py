@@ -111,7 +111,6 @@ class Router:
             for id, row in tqdm.tqdm(population.iterrows(),
                                      total=population.shape[0]):
                 origin, reg_office, weight = row
-                from IPython import embed; embed()
                 b_ct, b_cd, b_ptt, b_ptd = routed_df.loc[origin, reg_office]
                 saved = {"weight":weight}
                 for office in offices_id:
