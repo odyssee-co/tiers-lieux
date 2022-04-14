@@ -22,27 +22,19 @@ def top_50_clusters(processed_path, eps=5000, min_samples=100):
     Return the top 50 adbscan cluster centroids with the most inhabitants
     leaving every days to go to work in another communes.
     """
-    persons_df = pd.read_csv(processed_path+"/persons.csv", dtype=str)
-    persons_df = persons_df[persons_df["origin_id"].astype(str)
-                                    != persons_df["destination_id"].astype(str)]
-    geometry=gpd.points_from_xy(persons_df.origin_x,
-                                persons_df.origin_y,
-                                crs="EPSG:2154")
-    persons_df = gpd.GeoDataFrame(persons_df, geometry=geometry)
-    pop = persons_df["origin_id"].value_counts()
-    pop_df = pd.DataFrame({'origin_id':pop.index, 'population':pop.values})
-    pop_df = pd.merge(pop_df, persons_df[["origin_id", "geometry"]],
-                          on="origin_id", how="left")
-    pop_df = pop_df[~pop_df.origin_id.duplicated()]
-    pop_df = gpd.GeoDataFrame(pop_df)
-    pop_df["X"] = pop_df.geometry.x
-    pop_df["Y"] = pop_df.geometry.y
-    pop_df = pop_df.dropna()
+    persons_df = pd.read_feather(processed_path+"/persons.feather")
+    persons_df = persons_df[persons_df["origin_id"]
+                                    != persons_df["destination_id"]]
+
+    df = persons_df.groupby("origin_id").sum()
+    municipalities = gpd.read_file(f"{processed_path}/communes.gpkg")
+    pop_df = df.merge(municipalities, how="left", left_on="origin_id",
+                      right_on="commune_id")[["commune_id", "weight", "x", "y"]]
+    pop_df.rename(columns={"x":"X", "y":"Y"}, inplace=True)
     adbs = ADBSCAN(eps, min_samples, pct_exact=1, keep_solus=True)
-    #adbs.fit(pop_df)
-    adbs.fit(pop_df, sample_weight=pop_df["population"])
-    from IPython import embed; embed()
-    #print(adbs.votes[adbs.votes["lbls"].astype("int")>0])
+    adbs.fit(pop_df, sample_weight=pop_df["weight"])
+    #from IPython import embed; embed()
+    print(adbs.votes[adbs.votes["lbls"].astype("int")>0])
     top_50 = list(persons_df["origin_id"].value_counts()[0:50].index)
 
     return top_50
