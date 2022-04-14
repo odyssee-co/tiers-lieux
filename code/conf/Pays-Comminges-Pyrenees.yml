@@ -1,7 +1,7 @@
 data_path : ../data
-processed_path : ../data/processed/Pyrenees-Haut-Garonnaise
+processed_path : ../data/processed/Pays-Comminges-Pyrenees
 
-municipality_file: ../data/territories/Pyrenees-Haut-Garonnaise_insee.txt
+municipality_file: ../data/territories/Pays-Comminges-Pyrenees_insee.txt
 
 departments: ["31"]
 exclude : []
@@ -17,3 +17,5 @@ isochrone : 15
 
 # Minimum saved time (in min) for an employee to choose an office
 min : 10
+
+sub_territories : ["conf/Coeur-et-Coteaux-du-Comminges.yml", "conf/Pyrenees-Haut-Garonnaise.yml", "conf/Cagire-Garonne-Salat.yml"]

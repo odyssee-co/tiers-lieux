@@ -1,7 +1,7 @@
 data_path : ../data
-processed_path : ../data/processed_comminges
+processed_path : ../data/processed/Coeur-et-Coteaux-du-Comminges
 
-municipality_file: analysis/comminges_insee.txt
+municipality_file: ../data/territories/Coeur-et-Coteaux-du-Comminges_insee.txt
 
 departments: ["31"]
 exclude : []
