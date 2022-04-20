@@ -18,7 +18,7 @@ def top_50(processed_path, exclude=[]):
     return top_50
 
 
-def adbscan(processed_path, eps=4000, min_samples=500, exclude=[],
+def adbscan(processed_path, exclude=[], eps=4000, min_samples=500,
                     verbose=True):
     """
     Return the top adbscan cluster centres with the most inhabitants
@@ -66,7 +66,7 @@ def adbscan(processed_path, eps=4000, min_samples=500, exclude=[],
             break
     return best
 
-def dbscan(processed_path, eps=4000, min_samples=500, exclude=[],
+def dbscan(processed_path, exclude=[], eps=4000, min_samples=500,
                     verbose=True):
     """
     Return the top dbscan cluster centres with the most inhabitants
