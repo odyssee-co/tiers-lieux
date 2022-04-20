@@ -8,7 +8,7 @@ with open("conf.yml", "r") as yml_file:
         cfg = yaml.safe_load(yml_file)
 
 r = router.Router(cfg)
-saved_df_w = r.get_saved_distance("top_50_muni")
+saved_df_w = r.get_saved_distance("top_50")
 saved_df = saved_df_w.drop("weight", axis=1)
 
 res_file = open(sys.argv[1], "a")

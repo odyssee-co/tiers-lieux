@@ -55,7 +55,6 @@ if __name__ == "__main__":
                     departments=departments, municipalities=municipalities_list)
         df_pop.reset_index(drop=True).to_feather(pop_path)
 
-    #preselected_muni = preselection.get_top_50_municipalities(data_path, exclude=exclude)
     r = router.Router(cfg)
     saved_df_w = r.get_saved_distance(presel_func)
 

@@ -28,7 +28,7 @@ df_names = df_names.drop_duplicates("municipality_id")
 
 
 r = router.Router(cfg)
-saved_df_w = r.get_saved_distance("top_50_muni")
+saved_df_w = r.get_saved_distance("top_50")
 saved_df = saved_df_w.drop("weight", axis=1)
 weight = saved_df_w["weight"]
 nb_persons = weight.sum()
