@@ -14,8 +14,9 @@ def top_50(processed_path, exclude=[]):
     persons_df = persons_df[persons_df["origin_id"]
                                     != persons_df["destination_id"]]
     persons_df = persons_df[~persons_df.origin_id.isin(exclude)]
-    return persons_df.groupby("origin_id").sum().sort_values(
-                                                "weight", ascending=False)[:50]
+
+    return list(persons_df.groupby("origin_id").sum().sort_values(
+                                          "weight", ascending=False)[:50].index)
 
 
 def adbscan(processed_path, exclude=[], eps=4000, min_samples=500,
