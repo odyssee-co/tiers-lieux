@@ -13,11 +13,9 @@ def top_50(processed_path, exclude=[]):
     persons_df = pd.read_feather(processed_path+"/persons.feather")
     persons_df = persons_df[persons_df["origin_id"]
                                     != persons_df["destination_id"]]
-    #we exclude Toulouse from the list of candidates
-
     persons_df = persons_df[~persons_df.origin_id.isin(exclude)]
-    top_50 = list(persons_df["origin_id"].value_counts()[0:50].index)
-    return top_50
+    return persons_df.groupby("origin_id").sum().sort_values(
+                                                "weight", ascending=False)[:50]
 
 
 def adbscan(processed_path, exclude=[], eps=4000, min_samples=500,
