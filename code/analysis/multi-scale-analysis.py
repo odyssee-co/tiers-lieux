@@ -22,11 +22,10 @@ data_path = os.path.abspath(cfg["data_path"])
 processed_path = os.path.abspath(cfg["processed_path"])
 departments = cfg["departments"]
 iso = cfg["isochrone"]
+
 presel_func = None
-try:
+if "preselection" in cfg.keys():
     presel_func = cfg["preselection"]
-except KeyError:
-    pass
 
 sub_territories = cfg["sub_territories"]
 sub_processed_paths = []

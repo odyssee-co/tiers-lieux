@@ -23,11 +23,10 @@ data_path = os.path.abspath(cfg["data_path"])
 processed_path = os.path.abspath(cfg["processed_path"])
 departments = cfg["departments"]
 iso = cfg["isochrone"]
+
 presel_func = None
-try:
+if "preselection" in cfg.keys():
     presel_func = cfg["preselection"]
-except KeyError:
-    pass
 
 df_names = pd.read_excel(f"{data_path}/reference_IRIS_geo2017.xls", skiprows = 5)
 df_names["municipality_id"] = df_names["CODE_IRIS"].astype(str).str[:5]

@@ -32,10 +32,8 @@ if __name__ == "__main__":
     departments = cfg["departments"]
 
     presel_func = None
-    try:
+    if "preselection" in cfg.keys():
         presel_func = cfg["preselection"]
-    except KeyError:
-        pass
 
     municipalities_list = utils.load_muni_list(cfg)
 
