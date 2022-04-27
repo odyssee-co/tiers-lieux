@@ -4,6 +4,7 @@ from esda.adbscan import ADBSCAN
 from sklearn.cluster import DBSCAN, KMeans
 from sklearn.neighbors import KernelDensity
 import numpy as np
+import math
 
 def top_50(processed_path, exclude=[]):
     """
@@ -146,7 +147,7 @@ def kmeans(processed_path, exclude=[], verbose=True):
     return best
 
 
-def kde(processed_path, exclude=[], verbose=True):
+def kde(processed_path, exclude=[], verbose=True, bandwidth=15000):
     """
     Return top_50 municipalities with highest score on a kernel density estimation
     """
@@ -160,7 +161,7 @@ def kde(processed_path, exclude=[], verbose=True):
     pop_df = df.merge(municipalities, how="left", left_on="origin_id",
                       right_on="commune_id")[["commune_id", "weight", "x", "y", "geometry"]]
     coord = pop_df[["x", "y"]].values
-    kde = KernelDensity(kernel='gaussian', bandwidth=0.2)
+    kde = KernelDensity(kernel='gaussian', bandwidth=bandwidth)
     kde.fit(coord, sample_weight=pop_df["weight"])
     kde.score_samples(coord)
     log_dens = kde.score_samples(coord)
@@ -168,3 +169,50 @@ def kde(processed_path, exclude=[], verbose=True):
     df = pop_df[["commune_id", "geometry"]].join(score)
     df = df.sort_values("score", ascending=False)
     return list(df.commune_id)[:50]
+
+
+def density_centers(processed_path, exclude=[], verbose=True, iso=15):
+    """
+    Return top_50 municipalities with highest score on a kernel density estimation
+    """
+    routed_path = processed_path+"/routed.csv"
+    routed_df = pd.read_csv(routed_path, sep=";", dtype={"person_id":str,
+                                                         "office_id":str,
+                                                         "car_travel_time":float,
+                                                         "car_distance":float})
+    routed_df = routed_df.rename(columns={"person_id":"origin_id",
+                        "office_id":"destination_id", "car_distance":"distance"})
+    routed_df = routed_df.pivot("origin_id", "destination_id", "distance")
+    persons_df = pd.read_feather(processed_path+"/persons.feather")
+    persons_df = persons_df[persons_df["origin_id"]
+                                    != persons_df["destination_id"]]
+    persons_df = persons_df[~persons_df.origin_id.isin(exclude)]
+    persons_df = persons_df.groupby("origin_id").sum()
+    weight = []
+
+    """
+    calculating the population in the zone of influence of each muni, population
+    in the neighboring munis are added with a factor decreasing with the distance
+    """
+    for muni, distances in routed_df.iterrows():
+        if muni in persons_df.index:
+            w = persons_df.loc[muni].weight
+        else:
+            w=0
+        for muni2, d in distances.iteritems():
+            if d < iso * 1000:
+                if muni2 in persons_df.index:
+                    w += persons_df.loc[muni2].weight / math.log(math.e + d/1000)
+        weight.append(w)
+    routed_df["weight"]=weight
+
+    # municipalities are sorted by their zone of influence
+    routed_df = routed_df.sort_values("weight", ascending=False)
+    routed_df = routed_df.drop("weight", axis=1)
+
+    # we iterate through the munis by importance, removing neighboring munis
+    to_remove = []
+    for muni, distances in routed_df.iterrows():
+        if muni not in to_remove:
+            to_remove.extend(routed_df[muni][distances<15000].index.drop(muni))
+    return list(routed_df.index.drop(to_remove))[:50]
