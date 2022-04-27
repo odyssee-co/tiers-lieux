@@ -202,7 +202,8 @@ def density_centers(processed_path, exclude=[], verbose=True, iso=15):
         for muni2, d in distances.iteritems():
             if d < iso * 1000:
                 if muni2 in persons_df.index:
-                    w += persons_df.loc[muni2].weight / math.log(math.e + d/1000)
+                    w += persons_df.loc[muni2].weight 
+                    #w += persons_df.loc[muni2].weight / math.log(math.e + d/1000)
         weight.append(w)
     routed_df["weight"]=weight
 
