@@ -7,11 +7,14 @@ import preprocessing.communes as com
 import preprocessing.population as pop
 import yaml
 import utils
+import pandas as pd
+import geopandas as gpd
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the optimizer")
     parser.add_argument("--conf", default="conf.yml", help="path to the configuraiton file")
     parser.add_argument("--verbose", "-v", action="store_true", help="verbose mode")
+    parser.add_argument("--interactive", "-i", action="store_true", help="interactive mode")
     parser.add_argument("--nb_offices", "-n", type=int, default=10,
                         help="number of offices")
     parser.add_argument("--sample", "-s", type=float, default=1, help="sample rate")
@@ -29,7 +32,13 @@ if __name__ == "__main__":
         cfg = yaml.safe_load(yml_file)
     data_path = os.path.abspath(cfg["data_path"])
     processed_path = os.path.abspath(cfg["processed_path"])
-    departments = cfg["departments"]
+    dest_dep = cfg["dest_dep"]
+    if "orig_dep" in cfg.keys():
+        orig_dep = cfg["orig_dep"]
+        departments = list(set(dest_dep.extend(orig_dep)))
+    else:
+        orig_dep = dest_dep
+        departments = dest_dep
 
     presel_func = None
     if "preselection" in cfg.keys():
@@ -50,7 +59,7 @@ if __name__ == "__main__":
     if not os.path.isfile(pop_path):
         pop_src = cfg["pop"]
         df_pop = getattr(pop, f"get_{pop_src}_population")(data_path,
-                    departments=departments, municipalities=municipalities_list)
+                    orig_dep=orig_dep, dest_dep=dest_dep, municipalities=municipalities_list)
         df_pop.reset_index(drop=True).to_feather(pop_path)
 
     r = router.Router(cfg)
@@ -84,3 +93,9 @@ if __name__ == "__main__":
         average = 2*res[0]/(1000*nb_employees)
         print("selected offices: %s" %(res[1]))
         print("average saved distance per day and per employee: %.2f km\n"%average)
+
+    if args.interactive:
+        df_pop = pd.read_feather(pop_path)
+        municipalities_df = gpd.read_file(communes_path,
+                                          dtype={"commune_id":str})
+        from IPython import embed; embed()

@@ -111,7 +111,7 @@ class Router:
             routed_df = self.get_routed()
 
             population = pd.read_feather(f"{self.processed_path}/persons.feather")
-            routed_df = routed_df[routed_df["origin_id"].isin(population.origin_id)]
+            #routed_df = routed_df[routed_df["origin_id"].isin(population.origin_id)]
             """
             from IPython import embed; embed()
             municipalities_df = gpd.read_file(
@@ -123,7 +123,8 @@ class Router:
             if presel_func:
                 offices_id = getattr(preselection, f"{presel_func}")(self.processed_path, exclude)
             else:
-                offices_id = routed_df["destination_id"].unique()
+                offices_id = routed_df[routed_df["origin_id"].isin(population.origin_id)]
+                offices_id = offices_id.unique()
             routed_df.set_index(["origin_id", "destination_id"], inplace=True)
 
             #calculate baseline car distance and check if user uses car anyway

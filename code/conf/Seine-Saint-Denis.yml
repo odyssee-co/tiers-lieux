@@ -1,5 +1,5 @@
 data_path : ../data
-processed_path : ../data/processed/Ile-de-France
+processed_path : ../data/processed/Seine-Saint-Denis
 
 departments : ["93"] #pop 1.654M
 exclude : []

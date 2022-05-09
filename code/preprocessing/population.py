@@ -1,7 +1,6 @@
 import preprocessing.process_hr as hr
 import pandas as pd
 import numpy as np
-import os
 
 def get_hr_population(data_path, departments):
     print("Computing hr population...")
@@ -9,7 +8,7 @@ def get_hr_population(data_path, departments):
     df["weight"] = 1
     return df.set_index("person_id")
 
-def get_insee_population(data_path, departments=[], municipalities=None):
+def get_insee_population(data_path, orig_dep=[], dest_dep=[], municipalities=None):
     print("Computing insee population...")
     columns = ["COMMUNE", "ARM", "DCLT", "CS1", "IPONDI", "TRANS", "VOIT"]
     dtype = {"COMMUNE":str, "ARM":str, "DCLT":str, "CS1":str, "IPONDI":float,
@@ -18,8 +17,8 @@ def get_insee_population(data_path, departments=[], municipalities=None):
     df = pd.read_csv(f"{data_path}/FD_MOBPRO_2018.csv", sep=";",
                      usecols=columns, dtype=dtype)
 
-    df = df[df["COMMUNE"].str[:2].isin(departments)]
-    df = df[df["DCLT"].str[:2].isin(departments)]
+    df = df[df["COMMUNE"].str[:2].isin(orig_dep)]
+    df = df[df["DCLT"].str[:2].isin(dest_dep)]
 
     if municipalities:
         df = df[df["COMMUNE"].isin(municipalities)]
