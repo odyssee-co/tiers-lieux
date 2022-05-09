@@ -35,7 +35,8 @@ if __name__ == "__main__":
     dest_dep = cfg["dest_dep"]
     if "orig_dep" in cfg.keys():
         orig_dep = cfg["orig_dep"]
-        departments = list(set(dest_dep.extend(orig_dep)))
+        dest_dep.extend(orig_dep)
+        departments = list(set(dest_dep))
     else:
         orig_dep = dest_dep
         departments = dest_dep

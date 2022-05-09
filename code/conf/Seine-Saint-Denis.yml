@@ -1,7 +1,8 @@
 data_path : ../data
 processed_path : ../data/processed/Seine-Saint-Denis
 
-departments : ["93"] #pop 1.654M
+dest_dep : ["75", "77", "78", "91", "92", "93", "94", "95"] 
+orig_dep : ["93"] #pop 1.654M
 exclude : []
 
 matsim_conf : ../data/matsim-conf/ile_de_france_config.xml
@@ -14,5 +15,4 @@ isochrone : 15
 
 # Minimum saved time (in min) for an employee to choose an office
 min : 10
-
 preselection: top_50
