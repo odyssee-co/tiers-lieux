@@ -78,7 +78,7 @@ ax.get_legend().set_title("Population")
 departments.plot(ax=ax, facecolor='none', edgecolor='black', linewidth=1, zorder=2)
 for sub_municipalities_list in sub_municipalities_lists:
     sub_municipalities = municipalities[municipalities["commune_id"].isin(sub_municipalities_list)]
-    sub_municipalities.dissolve().plot(ax=ax, facecolor='none', edgecolor='black', linewidth=1, zorder=3)
+    sub_municipalities.dissolve().plot(ax=ax, facecolor='none', edgecolor='black', linewidth=2, zorder=3)
 
 
 
@@ -100,6 +100,7 @@ roads[roads.highway!="secondary"].plot(ax=ax, color="white", linewidth=1, alpha=
 roads[roads.highway=="secondary"].plot(ax=ax, color="white", linewidth=0.5, alpha=0.4, zorder=4)
 
 #municipalities
+chosen = res[1]
 if presel_func:
     preselected_muni = municipalities[municipalities["commune_id"].isin(saved_df.columns
     )].copy()
@@ -109,14 +110,15 @@ chosen_muni = municipalities[municipalities["commune_id"].isin(res[1])].copy()
 chosen_muni["geometry"] = chosen_muni.centroid
 chosen_muni.plot(ax=ax, color="red", linewidth=5, zorder=20)
 
+sub_processed_chosen = []
 for sub_processed_path in sub_processed_paths:
     solver_res_path = f"{sub_processed_path}/solver_res_iso{iso}.txt"
     with open(solver_res_path) as f:
         l = f.readline()
         res = eval(l.strip())
+    sub_processed_chosen.extend(res[1])
     chosen_muni = municipalities[municipalities["commune_id"].isin(res[1])].copy()
     chosen_muni["geometry"] = chosen_muni.centroid
     chosen_muni.plot(ax=ax, color="yellow", linewidth=1, zorder=20)
-
 plt.axis('off')
 plt.savefig(f"{processed_path}/multi-scale-map_iso{iso}.png", bbox_inches='tight')

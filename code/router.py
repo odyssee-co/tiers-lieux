@@ -6,6 +6,19 @@ from pathlib import Path
 import preselection
 import tqdm
 import geopandas as gpd
+from shapely.geometry import Point
+
+def intra_car_travel_distance(poly):
+    """
+    Return an estimation of the distance between place of work and home for a
+    person living and working in the same municipality (given the shape of the
+    municipality.
+    """
+    box = poly.minimum_rotated_rectangle
+    x, y = box.exterior.coords.xy
+    edge_length = (Point(x[0], y[0]).distance(Point(x[1], y[1])), Point(x[1], y[1]).distance(Point(x[2], y[2])))
+    return max(edge_length)/2
+
 
 
 class Router:
@@ -99,7 +112,14 @@ class Router:
 
             population = pd.read_feather(f"{self.processed_path}/persons.feather")
             routed_df = routed_df[routed_df["origin_id"].isin(population.origin_id)]
-
+            """
+            from IPython import embed; embed()
+            municipalities_df = gpd.read_file(
+                                        f"{self.processed_path}/communes.gpkg",
+                                        dtype={"commune_id":str})
+            municipalities_df["intra"] = municipalities_df["geometry"].apply(intra_car_travel_distance)
+            df = routed_df[routed_df["origin_id"]==routed_df["destination_id"]]
+            """
             if presel_func:
                 offices_id = getattr(preselection, f"{presel_func}")(self.processed_path, exclude)
             else:

@@ -1,5 +1,5 @@
 data_path : ../data
-processed_path : ../data/processed_idf
+processed_path : ../data/processed/Ile-de-France
 
 departments : ["75", "77", "78", "91", "92", "93", "94", "95"] #pop 12 262 544
 exclude : []

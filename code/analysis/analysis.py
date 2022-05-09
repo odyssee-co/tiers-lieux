@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import yaml
 import dataframe_image as dfi
 import osmnx as ox
+import optimizer
 
 mpl.rcParams['figure.figsize'] = [15, 15]
 
@@ -36,7 +37,7 @@ df_names = df_names.drop_duplicates("municipality_id")
 
 
 r = router.Router(cfg)
-saved_df_w = r.get_saved_distance(presel_func)
+saved_df_w = r.get_saved_distance(None)
 saved_df = saved_df_w.drop("weight", axis=1)
 weight = saved_df_w["weight"]
 nb_persons = weight.sum()
@@ -125,7 +126,9 @@ roads[roads.highway=="secondary"].plot(ax=ax, color="white", linewidth=0.5, alph
 
 #municipalities
 if presel_func:
-    preselected_muni = municipalities[municipalities["commune_id"].isin(saved_df.columns
+    saved_df_presel_w = r.get_saved_distance(presel_func)
+    saved_df_presel = saved_df_presel_w.drop("weight", axis=1)
+    preselected_muni = municipalities[municipalities["commune_id"].isin(saved_df_presel.columns
     )].copy()
     preselected_muni["geometry"] = preselected_muni.centroid
     preselected_muni.plot(ax=ax, color="orange", linewidth=3, zorder=10)
@@ -135,6 +138,51 @@ chosen_muni.plot(ax=ax, color="red", linewidth=5, zorder=20)
 
 plt.axis('off')
 plt.savefig(f"{processed_path}/map_iso{iso}.png", bbox_inches='tight')
+
+#multiple runs
+res_file = open(f"{processed_path}/res_100.txt", "r")
+res_100 = []
+for l in res_file:
+    res_100.append(eval(l.strip()))
+
+ax = departments.plot(facecolor='none', edgecolor='black', linewidth=1.5)
+roads[roads.highway!="secondary"].plot(ax=ax, color="black", linewidth=0.5, alpha=0.4, zorder=3)
+#roads[roads.highway=="secondary"].plot(ax=ax, color="black", linewidth=0.5, alpha=0.4, zorder=4)
+#chosen_muni.plot(ax=ax, color="red", linewidth=5)
+n = len(res_100)
+for r in res_100:
+    muni = municipalities[municipalities["commune_id"].isin(r[1])].copy()
+    muni["geometry"] = muni.centroid
+    muni.plot(ax=ax, color="blue", linewidth=3, alpha=2/n)
+    ax.set_axis_off()
+plt.savefig(f"{processed_path}/multiple_map.png", bbox_inches='tight')
+
+#most occurence in multiple runs
+d = {}
+for r in res_100:
+    for muni in r[1]:
+        if muni in d:
+            d[muni] += 1
+        else:
+            d[muni] = 0
+s = pd.Series(d, name="count")
+s.index.name="commune_id"
+top_50 = list(s.sort_values(ascending=False)[:50].index)
+top_10 = list(s.sort_values(ascending=False)[:10].index)
+
+ax = departments.plot(facecolor='none', edgecolor='black', linewidth=1.5)
+roads[roads.highway!="secondary"].plot(ax=ax, color="black", linewidth=0.5, alpha=0.4, zorder=3)
+#roads[roads.highway=="secondary"].plot(ax=ax, color="black", linewidth=0.5, alpha=0.4, zorder=4)
+chosen_muni.plot(ax=ax, color="red", linewidth=5)
+
+top_50_df = municipalities[municipalities["commune_id"].isin(top_50)].copy()
+top_50_df["geometry"] = top_50_df.centroid
+top_50_df.plot(ax=ax, color="blue", linewidth=3, alpha=0.5, zorder=20)
+ax.set_axis_off()
+plt.savefig(f"{processed_path}/top_50_map.png", bbox_inches='tight')
+
+print(f"opti: {optimizer.eval(saved_df[res[1]])}")
+print(f"top_10: {optimizer.eval(saved_df[top_10])}")
 
 """
 # Plot labels

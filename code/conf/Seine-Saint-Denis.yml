@@ -1,10 +1,10 @@
 data_path : ../data
-processed_path : ../data/processed/Toulouse
+processed_path : ../data/processed/Ile-de-France
 
-departments : ["09", "11", "31", "32", "81", "82"] #pop 2 748 873
-exclude : ["31555"]
+departments : ["93"] #pop 1.654M
+exclude : []
 
-matsim_conf : ../data/matsim-conf/toulouse_config.xml
+matsim_conf : ../data/matsim-conf/ile_de_france_config.xml
 
 # population source (insee | hr)
 pop : insee
