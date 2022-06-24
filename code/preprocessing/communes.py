@@ -1,6 +1,8 @@
 import geopandas as gpd
 import pandas as pd
-import os
+from shapely.geometry import Point
+import random
+import numpy as np
 
 def get_coord(df_persons, communes):
     """
@@ -18,6 +20,18 @@ def get_coord(df_persons, communes):
                    on="destination_id", how="left")
     #df_persons.to_csv(data_path+"/processed/od_al.csv", sep=";", index=False)
     return df_persons
+
+def avg_d_within(poly, nb_it):
+    min_x, min_y, max_x, max_y = poly.bounds
+    sum = 0
+    for i in range(nb_it):
+        points = []
+        while len(points) < 2:
+            random_point = Point([random.uniform(min_x, max_x), random.uniform(min_y, max_y)])
+            if (random_point.within(poly)):
+                points.append(random_point)
+        sum += points[0].distance(points[1])
+    return sum/nb_it
 
 def get_communes(data_path, municipalities=None, departments=[]):
     """
@@ -38,6 +52,10 @@ def get_communes(data_path, municipalities=None, departments=[]):
     df_communes["y"] = df_communes.geometry.centroid.y
     df_communes = df_communes[["nom","insee", "geometry","x","y"]]
     df_communes = df_communes.rename(columns={"insee": "commune_id"})
+    avg_d_intra = []
+    for k, v in df_communes.iterrows():
+        avg_d_intra.append(avg_d_within(v.geometry, 1000))
+    df_communes["avg_d_intra"] = np.array(avg_d_intra)
     return df_communes
 
 

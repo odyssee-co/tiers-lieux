@@ -6,20 +6,6 @@ from pathlib import Path
 import preselection
 import tqdm
 import geopandas as gpd
-from shapely.geometry import Point
-
-def intra_car_travel_distance(poly):
-    """
-    Return an estimation of the distance between place of work and home for a
-    person living and working in the same municipality (given the shape of the
-    municipality.
-    """
-    box = poly.minimum_rotated_rectangle
-    x, y = box.exterior.coords.xy
-    edge_length = (Point(x[0], y[0]).distance(Point(x[1], y[1])), Point(x[1], y[1]).distance(Point(x[2], y[2])))
-    return max(edge_length)/2
-
-
 
 class Router:
 
@@ -85,6 +71,16 @@ class Router:
         routed_df.rename(columns={"person_id":"origin_id",
                                   "office_id":"destination_id"},
                                    inplace=True)
+        municipalities_df = gpd.read_file(f"{self.processed_path}/communes.gpkg",
+                                              dtype={"commune_id":str})
+        routed_df.loc[routed_df.origin_id==routed_df.destination_id,
+                        "car_distance"]=municipalities_df.avg_d_intra.values
+        routed_df.loc[routed_df.origin_id==routed_df.destination_id,
+               "car_travel_time"]=municipalities_df.avg_d_intra.values*1000/3600
+        routed_df.loc[routed_df.origin_id==routed_df.destination_id,
+                        "pt_distance"]=municipalities_df.avg_d_intra.values
+        routed_df.loc[routed_df.origin_id==routed_df.destination_id,
+               "pt_travel_time"]=municipalities_df.avg_d_intra.values*1000/3600
         return routed_df
 
 
@@ -123,8 +119,7 @@ class Router:
             if presel_func:
                 offices_id = getattr(preselection, f"{presel_func}")(self.processed_path, exclude)
             else:
-                offices_id = routed_df[routed_df["origin_id"].isin(population.origin_id)]
-                offices_id = offices_id.unique()
+                offices_id = population.origin_id.unique()
             routed_df.set_index(["origin_id", "destination_id"], inplace=True)
 
             #calculate baseline car distance and check if user uses car anyway
@@ -138,7 +133,7 @@ class Router:
                     ct, cd, ptt, ptd = routed_df.loc[origin, office]
                     saved_dist = 0
                     uses_car =  b_ct > b_ptt #used to go by car even if better pt existed
-                    car_best = ct < ptt
+                    car_best = ct <= ptt # <= so we take in account the intra_communal trips
                     #will the user keep using car and change office?
                     if uses_car or car_best:
                         if ct < isochrone and b_ct - ct > min_saved:

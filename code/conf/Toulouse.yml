@@ -1,7 +1,7 @@
 data_path : ../data
 processed_path : ../data/processed/Toulouse
 
-departments : ["09", "11", "31", "32", "81", "82"] #pop 2 748 873
+dest_dep : ["09", "11", "31", "32", "81", "82"] #pop 2 748 873
 exclude : ["31555"]
 
 matsim_conf : ../data/matsim-conf/toulouse_config.xml

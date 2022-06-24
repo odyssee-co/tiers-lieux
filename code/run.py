@@ -55,6 +55,10 @@ if __name__ == "__main__":
         df_communes = com.get_communes(data_path, municipalities=municipalities_list,
                                        departments=departments)
         df_communes.to_file(communes_path, driver = "GPKG")
+    df_communes = gpd.read_file(communes_path, dtype={"commune_id":str})
+    zone = df_communes[df_communes.commune_id.str[:2].isin(orig_dep)]
+    zone_center = zone.dissolve().centroid.iloc[0]
+    print(f"zone center: {zone_center.x}, {zone_center.y}")
 
     pop_path = f"{processed_path}/persons.feather"
     if not os.path.isfile(pop_path):
@@ -62,6 +66,7 @@ if __name__ == "__main__":
         df_pop = getattr(pop, f"get_{pop_src}_population")(data_path,
                     orig_dep=orig_dep, dest_dep=dest_dep, municipalities=municipalities_list)
         df_pop.reset_index(drop=True).to_feather(pop_path)
+    df_pop = pd.read_feather(pop_path)
 
     r = router.Router(cfg)
     saved_df_w = r.get_saved_distance(presel_func)
@@ -96,7 +101,4 @@ if __name__ == "__main__":
         print("average saved distance per day and per employee: %.2f km\n"%average)
 
     if args.interactive:
-        df_pop = pd.read_feather(pop_path)
-        municipalities_df = gpd.read_file(communes_path,
-                                          dtype={"commune_id":str})
         from IPython import embed; embed()

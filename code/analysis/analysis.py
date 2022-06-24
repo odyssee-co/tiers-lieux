@@ -22,7 +22,6 @@ with open(conf_file, "r") as yml_file:
         cfg = yaml.safe_load(yml_file)
 data_path = os.path.abspath(cfg["data_path"])
 processed_path = os.path.abspath(cfg["processed_path"])
-departments = cfg["departments"]
 iso = cfg["isochrone"]
 
 presel_func = None
@@ -47,6 +46,9 @@ municipalities = gpd.read_file(f"{processed_path}/communes.gpkg")
 municipalities_list = utils.load_muni_list(cfg)
 if municipalities_list:
     municipalities = municipalities[municipalities["commune_id"].isin(municipalities_list)]
+
+elif "orig_dep" in cfg.keys():
+    municipalities = municipalities[municipalities["commune_id"].str[:2].isin(cfg["orig_dep"])]
 municipalities["department"] = municipalities["commune_id"].str[:2]
 departments = municipalities.dissolve("department").reset_index()
 dep_name = pd.read_csv(f"{data_path}/departements-france.csv")
@@ -140,49 +142,74 @@ plt.axis('off')
 plt.savefig(f"{processed_path}/map_iso{iso}.png", bbox_inches='tight')
 
 #multiple runs
-res_file = open(f"{processed_path}/res_100.txt", "r")
-res_100 = []
-for l in res_file:
-    res_100.append(eval(l.strip()))
+path_res_100 = f"{processed_path}/res_100.txt"
+if os.path.exists(path_res_100):
+    res_file = open(path_res_100, "r")
+    res_100 = []
+    for l in res_file:
+        res_100.append(eval(l.strip()))
 
-ax = departments.plot(facecolor='none', edgecolor='black', linewidth=1.5)
-roads[roads.highway!="secondary"].plot(ax=ax, color="black", linewidth=0.5, alpha=0.4, zorder=3)
-#roads[roads.highway=="secondary"].plot(ax=ax, color="black", linewidth=0.5, alpha=0.4, zorder=4)
-#chosen_muni.plot(ax=ax, color="red", linewidth=5)
-n = len(res_100)
-for r in res_100:
-    muni = municipalities[municipalities["commune_id"].isin(r[1])].copy()
-    muni["geometry"] = muni.centroid
-    muni.plot(ax=ax, color="blue", linewidth=3, alpha=2/n)
+    ax = departments.plot(facecolor='none', edgecolor='black', linewidth=1.5)
+    roads[roads.highway!="secondary"].plot(ax=ax, color="black", linewidth=0.5, alpha=0.4, zorder=3)
+    #roads[roads.highway=="secondary"].plot(ax=ax, color="black", linewidth=0.5, alpha=0.4, zorder=4)
+    #chosen_muni.plot(ax=ax, color="red", linewidth=5)
+    n = len(res_100)
+    for r in res_100:
+        muni = municipalities[municipalities["commune_id"].isin(r[1])].copy()
+        muni["geometry"] = muni.centroid
+        muni.plot(ax=ax, color="blue", linewidth=3, alpha=2/n)
+        ax.set_axis_off()
+    plt.savefig(f"{processed_path}/multiple_map.png", bbox_inches='tight')
+
+    #most occurence in multiple runs
+    d = {}
+    for r in res_100:
+        for muni in r[1]:
+            if muni in d:
+                d[muni] += 1
+            else:
+                d[muni] = 0
+    s = pd.Series(d, name="count")
+    s.index.name="commune_id"
+    top_50 = list(s.sort_values(ascending=False)[:50].index)
+    top_10 = list(s.sort_values(ascending=False)[:10].index)
+
+    ax = departments.plot(facecolor='none', edgecolor='black', linewidth=1.5)
+    roads[roads.highway!="secondary"].plot(ax=ax, color="black", linewidth=0.5, alpha=0.4, zorder=3)
+    #roads[roads.highway=="secondary"].plot(ax=ax, color="black", linewidth=0.5, alpha=0.4, zorder=4)
+    chosen_muni.plot(ax=ax, color="red", linewidth=5)
+
+    top_50_df = municipalities[municipalities["commune_id"].isin(top_50)].copy()
+    top_50_df["geometry"] = top_50_df.centroid
+    top_50_df.plot(ax=ax, color="blue", linewidth=3, alpha=0.5, zorder=20)
     ax.set_axis_off()
-plt.savefig(f"{processed_path}/multiple_map.png", bbox_inches='tight')
+    plt.savefig(f"{processed_path}/top_50_map.png", bbox_inches='tight')
 
-#most occurence in multiple runs
-d = {}
-for r in res_100:
-    for muni in r[1]:
-        if muni in d:
-            d[muni] += 1
-        else:
-            d[muni] = 0
-s = pd.Series(d, name="count")
-s.index.name="commune_id"
-top_50 = list(s.sort_values(ascending=False)[:50].index)
-top_10 = list(s.sort_values(ascending=False)[:10].index)
+    print(f"opti: {optimizer.eval(saved_df[res[1]])}")
+    print(f"top_10: {optimizer.eval(saved_df[top_10])}")
 
-ax = departments.plot(facecolor='none', edgecolor='black', linewidth=1.5)
-roads[roads.highway!="secondary"].plot(ax=ax, color="black", linewidth=0.5, alpha=0.4, zorder=3)
-#roads[roads.highway=="secondary"].plot(ax=ax, color="black", linewidth=0.5, alpha=0.4, zorder=4)
-chosen_muni.plot(ax=ax, color="red", linewidth=5)
-
-top_50_df = municipalities[municipalities["commune_id"].isin(top_50)].copy()
-top_50_df["geometry"] = top_50_df.centroid
-top_50_df.plot(ax=ax, color="blue", linewidth=3, alpha=0.5, zorder=20)
+#hérisson
+from IPython import embed; embed()
+df = persons_df.join(saved_df.idxmax(axis=1).rename("cw_id"))
+df = df.join((saved_df.max(axis=1)>0).rename("improved"))
+df = df[df["origin_id"]!=df["cw_id"]]
+df = df.merge(municipalities[["commune_id","geometry"]], left_on="origin_id", right_on="commune_id", how="left")
+df.rename(columns={"geometry":"geometry_orig"}, inplace = True)
+df = df.merge(municipalities[["commune_id","geometry"]], left_on="cw_id", right_on="commune_id", how="left")
+df.rename(columns={"geometry":"geometry_dest"}, inplace = True)
+df = gpd.GeoDataFrame(df)
+df["geometry_orig"] = df.geometry_orig.centroid
+df["geometry_dest"] = df.geometry_dest.centroid
+ax = m.plot()
+for x_orig, x_dest, y_orig, y_dest, n, improved in zip(
+    df.geometry_orig.x, df.geometry_dest.x, df.geometry_orig.y, df.geometry_dest.y,
+    df.weight, df.improved):
+        if improved:
+            ax.plot([x_orig , x_dest], [y_orig, y_dest], color="red", alpha=0.4)
 ax.set_axis_off()
-plt.savefig(f"{processed_path}/top_50_map.png", bbox_inches='tight')
+plt.savefig(f"{processed_path}/hérisson.png", bbox_inches='tight')
 
-print(f"opti: {optimizer.eval(saved_df[res[1]])}")
-print(f"top_10: {optimizer.eval(saved_df[top_10])}")
+from IPython import embed; embed()
 
 """
 # Plot labels
