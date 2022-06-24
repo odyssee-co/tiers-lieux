@@ -91,7 +91,7 @@ if __name__ == "__main__":
         print("average saved distance per day and per employee: %.2f km\n"%average)
 
     if solver:
-        suffix = f"n_{nb_offices}_iso{cfg['isochrone']}_min{cfg['min_saved']}_presel{presel_func}"
+        suffix = f"n_{nb_offices}_iso{cfg['isochrone']}_min{cfg['min']}_presel{presel_func}"
         solver_res_path = f"{processed_path}/solver_res_{suffix}.txt"
         print("Running MIP solver...")
         res = optimizer.mip(saved_df, nb_offices, verbose=verbose, solver=solver)
