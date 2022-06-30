@@ -90,12 +90,8 @@ class Router:
         in each office (0 if the saved time if negative or inferior to min_saved).
 
         """
-
         isochrone = self.cfg["isochrone"]
         min_saved=self.cfg["min"]
-        isochrone *= 60
-        min_saved *= 60
-
         exclude = self.cfg["exclude"]
         path_saved = f"{self.processed_path}/saved_iso{isochrone}_min{min_saved}_{presel_func}.feather"
         if os.path.exists(path_saved):
@@ -103,6 +99,8 @@ class Router:
             saved_df = pd.read_feather(path_saved).set_index("person_id")
         else:
             print("Processing saved distances matrix")
+            isochrone *= 60
+            min_saved *= 60
             routed_df = self.get_routed()
 
             population = pd.read_feather(f"{self.processed_path}/persons.feather")
