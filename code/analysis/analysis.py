@@ -23,10 +23,12 @@ with open(conf_file, "r") as yml_file:
 data_path = os.path.abspath(cfg["data_path"])
 processed_path = os.path.abspath(cfg["processed_path"])
 iso = cfg["isochrone"]
+nb_offices = int(cfg["nb_offices"])
 
 presel_func = None
 if "preselection" in cfg.keys():
     presel_func = cfg["preselection"]
+suffix = f"_n{nb_offices}_iso{iso}_min10_{presel_func}"
 
 df_names = pd.read_excel(f"{data_path}/reference_IRIS_geo2017.xls", skiprows = 5)
 df_names["municipality_id"] = df_names["CODE_IRIS"].astype(str).str[:5]
@@ -36,7 +38,7 @@ df_names = df_names.drop_duplicates("municipality_id")
 
 
 r = router.Router(cfg)
-saved_df_w = r.get_saved_distance(None)
+saved_df_w = r.get_saved_distance(presel_func)
 saved_df = saved_df_w.drop("weight", axis=1)
 weight = saved_df_w["weight"]
 nb_persons = weight.sum()
@@ -65,7 +67,7 @@ municipalities = pd.merge(municipalities, density_df, on="commune_id",
                             how="left").fillna(0)
 municipalities["density"] = municipalities["density"].astype(int)
 
-solver_res_path = f"{processed_path}/solver_res_iso{iso}.txt"
+solver_res_path = f"{processed_path}/solver_res{suffix}.txt"
 with open(solver_res_path) as f:
     l = f.readline()
     res = eval(l.strip())
@@ -98,7 +100,7 @@ df = df.append(total, ignore_index=True)
 df["attractiveness"] = df["attractiveness"].astype(int)
 df["saved_distance_km"] = df["saved_distance_km"].astype(int)
 dfi.export(df[["label", "attractiveness", "saved_distance_km",
-            "saved_distance_per_person_km"]], f"{processed_path}/tab-iso{iso}.png")
+            "saved_distance_per_person_km"]], f"{processed_path}/tab{suffix}.png")
 
 
 #base map
@@ -128,9 +130,9 @@ roads[roads.highway=="secondary"].plot(ax=ax, color="white", linewidth=0.5, alph
 
 #municipalities
 if presel_func:
-    saved_df_presel_w = r.get_saved_distance(presel_func)
-    saved_df_presel = saved_df_presel_w.drop("weight", axis=1)
-    preselected_muni = municipalities[municipalities["commune_id"].isin(saved_df_presel.columns
+    #saved_df_presel_w = r.get_saved_distance(presel_func)
+    #saved_df_presel = saved_df_presel_w.drop("weight", axis=1)
+    preselected_muni = municipalities[municipalities["commune_id"].isin(saved_df.columns
     )].copy()
     preselected_muni["geometry"] = preselected_muni.centroid
     preselected_muni.plot(ax=ax, color="orange", linewidth=3, zorder=10)
@@ -139,7 +141,7 @@ chosen_muni["geometry"] = chosen_muni.centroid
 chosen_muni.plot(ax=ax, color="red", linewidth=5, zorder=20)
 
 plt.axis('off')
-plt.savefig(f"{processed_path}/map_iso{iso}.png", bbox_inches='tight')
+plt.savefig(f"{processed_path}/map{suffix}.png", bbox_inches='tight')
 
 #multiple runs
 path_res_100 = f"{processed_path}/res_100.txt"
@@ -189,9 +191,8 @@ if os.path.exists(path_res_100):
     print(f"top_10: {optimizer.eval(saved_df[top_10])}")
 
 #hérisson
-from IPython import embed; embed()
-df = persons_df.join(saved_df.idxmax(axis=1).rename("cw_id"))
-df = df.join((saved_df.max(axis=1)>0).rename("improved"))
+df = persons_df.join(saved_df_res.idxmax(axis=1).rename("cw_id"))
+df = df[saved_df_res.max(axis=1)>0]
 df = df[df["origin_id"]!=df["cw_id"]]
 df = df.merge(municipalities[["commune_id","geometry"]], left_on="origin_id", right_on="commune_id", how="left")
 df.rename(columns={"geometry":"geometry_orig"}, inplace = True)
@@ -201,15 +202,12 @@ df = gpd.GeoDataFrame(df)
 df["geometry_orig"] = df.geometry_orig.centroid
 df["geometry_dest"] = df.geometry_dest.centroid
 ax = m.plot()
-for x_orig, x_dest, y_orig, y_dest, n, improved in zip(
+for x_orig, x_dest, y_orig, y_dest, n in zip(
     df.geometry_orig.x, df.geometry_dest.x, df.geometry_orig.y, df.geometry_dest.y,
-    df.weight, df.improved):
-        if improved:
-            ax.plot([x_orig , x_dest], [y_orig, y_dest], color="red", alpha=0.4)
+    df.weight):
+        ax.plot([x_orig , x_dest], [y_orig, y_dest], color="red", alpha=0.4)
 ax.set_axis_off()
-plt.savefig(f"{processed_path}/hérisson.png", bbox_inches='tight')
-
-from IPython import embed; embed()
+plt.savefig(f"{processed_path}/herisson{suffix}.png", bbox_inches='tight')
 
 """
 # Plot labels

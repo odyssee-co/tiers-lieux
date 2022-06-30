@@ -15,8 +15,6 @@ if __name__ == "__main__":
     parser.add_argument("--conf", default="conf.yml", help="path to the configuraiton file")
     parser.add_argument("--verbose", "-v", action="store_true", help="verbose mode")
     parser.add_argument("--interactive", "-i", action="store_true", help="interactive mode")
-    parser.add_argument("--nb_offices", "-n", type=int, default=10,
-                        help="number of offices")
     parser.add_argument("--sample", "-s", type=float, default=1, help="sample rate")
     parser.add_argument("--solver", type=str, help="use mip solver (glpk|cbc)")
     parser.add_argument("--heuristic", type=str, help="use heuristic search (rand, rand_w, evol)")
@@ -24,7 +22,6 @@ if __name__ == "__main__":
     args=parser.parse_args()
     yml_path = args.conf
     verbose = args.verbose
-    nb_offices = args.nb_offices
     sample_rate = args.sample
     solver = args.solver
 
@@ -33,6 +30,7 @@ if __name__ == "__main__":
     data_path = os.path.abspath(cfg["data_path"])
     processed_path = os.path.abspath(cfg["processed_path"])
     dest_dep = cfg["dest_dep"]
+    nb_offices = int(cfg["nb_offices"])
     if "orig_dep" in cfg.keys():
         orig_dep = cfg["orig_dep"]
         dest_dep.extend(orig_dep)
@@ -91,7 +89,7 @@ if __name__ == "__main__":
         print("average saved distance per day and per employee: %.2f km\n"%average)
 
     if solver:
-        suffix = f"n_{nb_offices}_iso{cfg['isochrone']}_min{cfg['min']}_presel{presel_func}"
+        suffix = f"n{nb_offices}_iso{cfg['isochrone']}_min{cfg['min']}_{presel_func}"
         solver_res_path = f"{processed_path}/solver_res_{suffix}.txt"
         print("Running MIP solver...")
         res = optimizer.mip(saved_df, nb_offices, verbose=verbose, solver=solver)

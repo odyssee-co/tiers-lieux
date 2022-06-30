@@ -93,7 +93,7 @@ class Router:
 
         isochrone = self.cfg["isochrone"]
         min_saved=self.cfg["min"]
-        suffix = f"_iso{isochrone}_min{min_saved}_{presel_func}"
+        suffix = f"_n10_iso{isochrone}_min{min_saved}_{presel_func}"
         isochrone *= 60
         min_saved *= 60
 
