@@ -13,25 +13,22 @@ import geopandas as gpd
 def optimize(n, iso, min):
     opt_dic = {"mip":"mip", "rand":"random", "rand_w":"random_weighted", "evol":"evolutionary"}
     res_path = f"{processed_path}/res.csv"
-    done = False
-    if os.path.exists(res_path):
-        key = f"{n};{iso};{min};{presel_func};{opt_dic[args.opt]}"
-        with open(res_path, "r") as f:
-            done = key in f.read()
-    else:
-        with open(res_path, "a") as f:
+    if not os.path.exists(res_path):
+        with open(res_path, "w") as f:
             f.write("n;iso;min;presel;optimizer;saved_d;selected_muni\n")
-    if done:
-        print("Already in res.csv")
+    r = pd.read_csv(res_path, sep=";")
+    res = r[(r["n"]==n) & (r["iso"]==iso) & (r["min"]==min)]
+    if len(res) > 0:
+        res = [res.iloc[0].saved_d, eval(res.iloc[0].selected_muni)]
     else:
         opt = getattr(optimizer, opt_dic[args.opt])
         print("Running %s..."%opt_dic[args.opt])
         res = opt(saved_df, n, verbose=verbose)
         with open(res_path, "a") as f:
             f.write(f"{n};{iso};{min};{presel_func};{opt_dic[args.opt]};{res[0]};{res[1]}\n")
-        average = 2*res[0]/(1000*nb_employees)
-        print("selected offices: %s" %(res[1]))
-        print("average saved distance per day and per employee: %.2f km\n"%average)
+    average = 2*res[0]/(1000*nb_employees)
+    print("selected offices: %s" %(res[1]))
+    print("average saved distance per day and per employee: %.2f km\n"%average)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the optimizer")
