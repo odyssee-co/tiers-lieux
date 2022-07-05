@@ -89,10 +89,9 @@ if __name__ == "__main__":
         res_path = f"{processed_path}/res.csv"
         if not os.path.exists(res_path):
             with open(res_path, "a") as f:
-                f.write("n;iso;min;presel;optimizer;saved_d;selected_muni")
+                f.write("n;iso;min;presel;optimizer;saved_d;selected_muni\n")
         with open(res_path, "a") as f:
-            f.write(f"{nb_offices};{cfg['isochrone']};{cfg['min']};\
-                         {presel_func};{opt[args.opt]};{res[0]};{res[1]}\n")
+            f.write(f"{nb_offices};{cfg['isochrone']};{cfg['min']};{presel_func};{opt_dic[args.opt]};{res[0]};{res[1]}\n")
 
     if args.interactive:
         from IPython import embed; embed()
