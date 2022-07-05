@@ -17,13 +17,12 @@ if __name__ == "__main__":
     parser.add_argument("--interactive", "-i", action="store_true", help="interactive mode")
     parser.add_argument("--sample", "-s", type=float, default=1, help="sample rate")
     parser.add_argument("--solver", type=str, help="use mip solver (glpk|cbc)")
-    parser.add_argument("--heuristic", type=str, help="use heuristic search (rand, rand_w, evol)")
+    parser.add_argument("--opt", type=str, help="optimizer to use (rand, rand_w, evol, mip)")
 
     args=parser.parse_args()
     yml_path = args.conf
     verbose = args.verbose
     sample_rate = args.sample
-    solver = args.solver
 
     with open(yml_path, "r") as yml_file:
         cfg = yaml.safe_load(yml_file)
@@ -79,11 +78,11 @@ if __name__ == "__main__":
     print("max saved distance per day and per employee: %.2f km\n"%max)
     #res = optimizer.exhaustive(saved_df, nb_offices)
 
-    if args.heuristic:
-        heuristic_dic = {"rand":"random", "rand_w":"random_weighted", "evol":"evolutionary"}
-        heuristic = getattr(optimizer, heuristic_dic[args.heuristic])
-        print("Running %s heuristic..."%heuristic_dic[args.heuristic])
-        res = heuristic(saved_df, nb_offices, verbose=verbose)
+    if args.opt:
+        opt_dic = {"mip":"mip", "rand":"random", "rand_w":"random_weighted", "evol":"evolutionary"}
+        opt = getattr(optimizer, opt_dic[args.opt])
+        print("Running %s..."%heuristic_dic[args.opt])
+        res = opt(saved_df, nb_offices, verbose=verbose)
         average = 2*res[0]/(1000*nb_employees)
         print("selected offices: %s" %(res[1]))
         print("average saved distance per day and per employee: %.2f km\n"%average)

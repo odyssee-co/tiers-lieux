@@ -94,6 +94,7 @@ class Router:
         min_saved=self.cfg["min"]
         exclude = self.cfg["exclude"]
         path_saved = f"{self.processed_path}/saved_iso{isochrone}_min{min_saved}_{presel_func}.feather"
+        print(path_saved)
         if os.path.exists(path_saved):
             print("Loading saved distances matrix...")
             saved_df = pd.read_feather(path_saved).set_index("person_id")

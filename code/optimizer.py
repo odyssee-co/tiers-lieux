@@ -100,7 +100,7 @@ def evolutionary(saved_df, n, verbose=False, ratio=0.8, nb_it=1000):
     return best
 
 
-def mip(saved_df, nb_offices, solver="glpk", verbose=False):
+def mip(saved_df, nb_offices, solver="cbc", verbose=False):
     """
     MIP modelization in pyomo
     """
