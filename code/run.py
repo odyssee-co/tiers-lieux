@@ -80,18 +80,25 @@ if __name__ == "__main__":
 
     if args.opt:
         opt_dic = {"mip":"mip", "rand":"random", "rand_w":"random_weighted", "evol":"evolutionary"}
-        opt = getattr(optimizer, opt_dic[args.opt])
-        print("Running %s..."%opt_dic[args.opt])
-        res = opt(saved_df, nb_offices, verbose=verbose)
-        average = 2*res[0]/(1000*nb_employees)
-        print("selected offices: %s" %(res[1]))
-        print("average saved distance per day and per employee: %.2f km\n"%average)
         res_path = f"{processed_path}/res.csv"
-        if not os.path.exists(res_path):
+        done = False
+        if os.path.exists(res_path):
+            key = f"{nb_offices};{cfg['isochrone']};{cfg['min']};{presel_func};{opt_dic[args.opt]}"
+            with open(res_path, "r") as f:
+                done = key in f.read()
+                print("Already in res.csv")
+        else:
             with open(res_path, "a") as f:
                 f.write("n;iso;min;presel;optimizer;saved_d;selected_muni\n")
-        with open(res_path, "a") as f:
-            f.write(f"{nb_offices};{cfg['isochrone']};{cfg['min']};{presel_func};{opt_dic[args.opt]};{res[0]};{res[1]}\n")
+        if not done:
+            opt = getattr(optimizer, opt_dic[args.opt])
+            print("Running %s..."%opt_dic[args.opt])
+            res = opt(saved_df, nb_offices, verbose=verbose)
+            with open(res_path, "a") as f:
+                f.write(f"{nb_offices};{cfg['isochrone']};{cfg['min']};{presel_func};{opt_dic[args.opt]};{res[0]};{res[1]}\n")
+            average = 2*res[0]/(1000*nb_employees)
+            print("selected offices: %s" %(res[1]))
+            print("average saved distance per day and per employee: %.2f km\n"%average)
 
     if args.interactive:
         from IPython import embed; embed()
