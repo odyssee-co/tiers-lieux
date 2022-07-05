@@ -10,6 +10,29 @@ import utils
 import pandas as pd
 import geopandas as gpd
 
+def optimize(n, iso, min):
+    opt_dic = {"mip":"mip", "rand":"random", "rand_w":"random_weighted", "evol":"evolutionary"}
+    res_path = f"{processed_path}/res.csv"
+    done = False
+    if os.path.exists(res_path):
+        key = f"{n};{iso};{min};{presel_func};{opt_dic[args.opt]}"
+        with open(res_path, "r") as f:
+            done = key in f.read()
+    else:
+        with open(res_path, "a") as f:
+            f.write("n;iso;min;presel;optimizer;saved_d;selected_muni\n")
+    if done:
+        print("Already in res.csv")
+    else:
+        opt = getattr(optimizer, opt_dic[args.opt])
+        print("Running %s..."%opt_dic[args.opt])
+        res = opt(saved_df, n, verbose=verbose)
+        with open(res_path, "a") as f:
+            f.write(f"{n};{iso};{min};{presel_func};{opt_dic[args.opt]};{res[0]};{res[1]}\n")
+        average = 2*res[0]/(1000*nb_employees)
+        print("selected offices: %s" %(res[1]))
+        print("average saved distance per day and per employee: %.2f km\n"%average)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the optimizer")
     parser.add_argument("--conf", default="conf.yml", help="path to the configuraiton file")
@@ -29,7 +52,6 @@ if __name__ == "__main__":
     data_path = os.path.abspath(cfg["data_path"])
     processed_path = os.path.abspath(cfg["processed_path"])
     dest_dep = cfg["dest_dep"]
-    nb_offices = int(cfg["nb_offices"])
     if "orig_dep" in cfg.keys():
         orig_dep = cfg["orig_dep"]
         dest_dep.extend(orig_dep)
@@ -42,6 +64,7 @@ if __name__ == "__main__":
     if "preselection" in cfg.keys():
         presel_func = cfg["preselection"]
 
+    from IPython import embed; embed()
     municipalities_list = utils.load_muni_list(cfg)
 
     if not os.path.isdir(processed_path):
@@ -76,29 +99,19 @@ if __name__ == "__main__":
     max = 2*optimizer.eval(saved_df)/(1000*nb_employees) #upper bound when all offices are available
     print("nb employee: %s"%nb_employees)
     print("max saved distance per day and per employee: %.2f km\n"%max)
-    #res = optimizer.exhaustive(saved_df, nb_offices)
 
     if args.opt:
-        opt_dic = {"mip":"mip", "rand":"random", "rand_w":"random_weighted", "evol":"evolutionary"}
-        res_path = f"{processed_path}/res.csv"
-        done = False
-        if os.path.exists(res_path):
-            key = f"{nb_offices};{cfg['isochrone']};{cfg['min']};{presel_func};{opt_dic[args.opt]}"
-            with open(res_path, "r") as f:
-                done = key in f.read()
-                print("Already in res.csv")
-        else:
-            with open(res_path, "a") as f:
-                f.write("n;iso;min;presel;optimizer;saved_d;selected_muni\n")
-        if not done:
-            opt = getattr(optimizer, opt_dic[args.opt])
-            print("Running %s..."%opt_dic[args.opt])
-            res = opt(saved_df, nb_offices, verbose=verbose)
-            with open(res_path, "a") as f:
-                f.write(f"{nb_offices};{cfg['isochrone']};{cfg['min']};{presel_func};{opt_dic[args.opt]};{res[0]};{res[1]}\n")
-            average = 2*res[0]/(1000*nb_employees)
-            print("selected offices: %s" %(res[1]))
-            print("average saved distance per day and per employee: %.2f km\n"%average)
+        nb_offices = cfg["nb_offices"]
+        if type(nb_offices) != list:
+            nb_offices = [nb_offices]
+        isochrones = cfg["isochrone"]
+        if type(isochrones) != list:
+            isochrones = [isochrones]
+        minimals = cfg["min"]
+        if type(minimals) != list:
+            minimals = [minimals]
+        for n, iso, min in zip(nb_offices, isochrones, minimals):
+            optimize(n, iso, min)
 
     if args.interactive:
         from IPython import embed; embed()
