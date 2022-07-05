@@ -16,4 +16,4 @@ isochrone : 60
 min : 10
 
 preselection: dbscan
-nb_offices: 10
+nb_offices: [4,5,5]

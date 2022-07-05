@@ -64,7 +64,6 @@ if __name__ == "__main__":
     if "preselection" in cfg.keys():
         presel_func = cfg["preselection"]
 
-    from IPython import embed; embed()
     municipalities_list = utils.load_muni_list(cfg)
 
     if not os.path.isdir(processed_path):
@@ -110,8 +109,10 @@ if __name__ == "__main__":
         minimals = cfg["min"]
         if type(minimals) != list:
             minimals = [minimals]
-        for n, iso, min in zip(nb_offices, isochrones, minimals):
-            optimize(n, iso, min)
+        for n in nb_offices:
+            for iso in isochrones:
+                for min in minimals:
+                    optimize(n, iso, min)
 
     if args.interactive:
         from IPython import embed; embed()
