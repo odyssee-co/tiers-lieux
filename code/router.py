@@ -11,10 +11,11 @@ class Router:
 
     jar_file = "flow-1.2.0.jar"
 
-    def __init__(self, cfg):
-        self.cfg = cfg
-        self.data_path = os.path.abspath(cfg["data_path"])
-        self.processed_path = os.path.abspath(cfg["processed_path"])
+    def __init__(self, data_path, processed_path, exclude, matsim_conf):
+        self.data_path = data_path
+        self.processed_path = processed_path
+        self.exclude = exclude
+        self.matsim_conf = matsim_conf
 
     def compute_request(self):
         path = f"{self.processed_path}/request.csv"
@@ -59,7 +60,7 @@ class Router:
                 "-cp", f"{self.data_path}/{self.jar_file}",
                 "-Xmx28G",
                 "org.eqasim.odyssee.RunBatchRouting",
-                "--config-path", os.path.abspath(self.cfg["matsim_conf"]),
+                "--config-path", self.matsim_conf,
                 "--input-path", req_path,
                 "--output-path", routed_path]
 
@@ -84,22 +85,18 @@ class Router:
         return routed_df
 
 
-    def get_saved_distance(self, presel_func):
+    def get_saved_distance(self, isochrone, min_saved, presel_func):
         """
         Return a dataframe containing for each employee, the time he would save working
         in each office (0 if the saved time if negative or inferior to min_saved).
-
         """
-        isochrone = self.cfg["isochrone"]
-        min_saved=self.cfg["min"]
-        exclude = self.cfg["exclude"]
+        exclude = self.exclude
         path_saved = f"{self.processed_path}/saved_iso{isochrone}_min{min_saved}_{presel_func}.feather"
-        print(path_saved)
         if os.path.exists(path_saved):
-            print("Loading saved distances matrix...")
+            print(f"Loading matrix ({isochrone}, {min_saved}, {presel_func})...")
             saved_df = pd.read_feather(path_saved).set_index("person_id")
         else:
-            print("Processing saved distances matrix")
+            print(f"Processing matrix ({isochrone}, {min_saved}, {presel_func})...")
             isochrone *= 60
             min_saved *= 60
             routed_df = self.get_routed()

@@ -10,10 +10,11 @@ matsim_conf : ../data/matsim-conf/toulouse_config.xml
 pop : insee
 
 # Maximum travel time (in min) for an employee to consider this office
-isochrone : 60
+isochrone : [30, 60]
 
 # Minimum saved time (in min) for an employee to choose an office
 min : 10
 
-preselection: dbscan
-nb_offices: [4,5,5]
+preselection: ["top_50", "dbscan"]
+nb_offices: [3,4,5]
+optimizer: ["random", "evolutionary"]
