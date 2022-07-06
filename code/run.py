@@ -90,7 +90,7 @@ if __name__ == "__main__":
         if type(presel_functions) != list:
             presel_functions = [presel_functions]
     else:
-        presel_functions = [None]
+        presel_functions = ["all"]
 
     if "optimizer" in cfg.keys():
         optimizations = cfg["optimizer"]

@@ -6,6 +6,13 @@ from sklearn.neighbors import KernelDensity
 import numpy as np
 import math
 
+def all(processed_path, exclude=[]):
+    """
+    Return all municipalities minus the one in exclude.
+    """
+    municipalities = gpd.read_file(f"{processed_path}/communes.gpkg")
+    return list(set(municipalities.commune_id) - set(exclude))
+
 def top_50(processed_path, exclude=[]):
     """
     Return the top 50 municipalities with the most inhabitants

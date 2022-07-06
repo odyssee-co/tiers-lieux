@@ -143,6 +143,4 @@ class Router:
             saved_df.index.names = ["person_id"]
             saved_df.reset_index().to_feather(path_saved)
 
-        if not presel_func:
-            saved_df.drop(columns=exclude, inplace=True)
         return saved_df

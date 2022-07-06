@@ -15,6 +15,6 @@ isochrone : [30, 60]
 # Minimum saved time (in min) for an employee to choose an office
 min : 10
 
-preselection: ["top_50", "dbscan"]
+#preselection: ["top_50", "dbscan"]
 nb_offices: [3,4,5]
 optimizer: ["random", "evolutionary"]
