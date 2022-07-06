@@ -122,7 +122,6 @@ if __name__ == "__main__":
             print("max saved distance per day and per employee: %.2f km\n"%max)
         if len(optimizations) > 0:
             for opt, n in product(optimizations, nb_offices):
-                print(opt, n, iso, min, presel)
                 optimize(opt, n, iso, min, presel)
 
     if args.interactive:
