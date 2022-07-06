@@ -18,7 +18,8 @@ def optimize(opt_func, n, iso, min, presel):
         with open(res_path, "w") as f:
             f.write("n;iso;min;presel;optimizer;saved_d;selected_muni\n")
     r = pd.read_csv(res_path, sep=";")
-    res = r[(r["optimizer"]==opt_func) & (r["n"]==n) & (r["iso"]==iso) & (r["min"]==min)]
+    res = r[(r["optimizer"]==opt_func) & (r["presel"]==presel) & (r["n"]==n) &
+                                         (r["iso"]==iso) & (r["min"]==min)]
     if len(res) > 0:
         res = [res.iloc[0].saved_d, eval(res.iloc[0].selected_muni)]
     else:
