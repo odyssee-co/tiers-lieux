@@ -10,6 +10,7 @@ import utils
 import pandas as pd
 import geopandas as gpd
 from itertools import product
+import time
 
 
 def optimize(opt_func, n, iso, min, presel):
@@ -25,9 +26,12 @@ def optimize(opt_func, n, iso, min, presel):
     else:
         opt = getattr(optimizer, opt_func)
         print(f"Optimizing ({n},{iso},{min},{presel},{opt_func})...")
+        begin = time.time()
         res = opt(saved_df, n, verbose=verbose)
+        end = time.time()
+        exec_time = end - begin
         with open(res_path, "a") as f:
-            f.write(f"{n};{iso};{min};{presel};{opt_func};{res[0]};{res[1]}\n")
+            f.write(f"{n};{iso};{min};{presel};{opt_func};{exec_time};{res[0]};{res[1]}\n")
     if verbose:
         average = 2*res[0]/(1000*nb_employees)
         print("selected offices: %s" %(res[1]))
