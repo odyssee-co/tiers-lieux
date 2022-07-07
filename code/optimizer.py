@@ -59,7 +59,7 @@ def random_weighted(saved_df, n, verbose=False, nb_it=3000):
     return best
 
 
-def evolutionary(saved_df, n, verbose=False, ratio=0.8, nb_it=1000):
+def evolutionary(saved_df, n, verbose=False, ratio=0.5, nb_it=1000):
     """
     Evolutionary algorithm that keep a ratio of the population weighted by their
     performance in the current subset, and return the best if nb_it iterations
