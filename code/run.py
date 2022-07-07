@@ -19,7 +19,7 @@ def optimize(opt_func, n, iso, min, presel):
     res_path = f"{processed_path}/res.csv"
     if not os.path.exists(res_path):
         with open(res_path, "w") as f:
-            f.write("n;iso;min;presel;optimizer;saved_d;selected_muni\n")
+            f.write("n;iso;min;presel;optimizer;exec_time;saved_d;selected_muni\n")
     r = pd.read_csv(res_path, sep=";")
     res = r[(r["optimizer"]==opt_func) & (r["presel"]==presel) & (r["n"]==n) &
                                          (r["iso"]==iso) & (r["min"]==min)]
