@@ -39,7 +39,7 @@ def random(saved_df, n, verbose=False, nb_it=3000):
     return best
 
 
-def random_weighted(saved_df, n, verbose=False, nb_it=10000):
+def random_weighted(saved_df, n, verbose=False, nb_it=3000):
     """
     Randomly select a subset of offices weighted by their individual performances,
     and return the best if nb_it iterations passed without improving the result.
