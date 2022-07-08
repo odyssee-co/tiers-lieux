@@ -1,5 +1,7 @@
 import numpy as np
 import pyomo.environ as pyo
+from multiprocessing import Pool
+from functools import partial
 
 
 def eval(saved_df):
@@ -97,6 +99,23 @@ def evolutionary(saved_df, n, verbose=False, ratio=0.5, nb_it=1000):
 
         sample2 = saved_df.drop(sample.columns, axis=1).sample(n-nb_to_keep, axis=1, weights=w_single.drop(sample.columns)) #we complete with random in the remainings pop
         sample = sample1.join(sample2)
+    return best
+
+def evolutionary_wrapper(saved_df, n, id):
+    np.random.seed(id)
+    return evolutionary(saved_df, n, nb_it=300)
+
+def p_evolutionary(saved_df, n, verbose=False, ratio=0.5, nb_it=300, nb_threads=4):
+    """
+    Parallel implementation of the Evolutionary algorithm .
+    """
+    with Pool(nb_threads) as p:
+        res = p.map(partial(evolutionary_wrapper, saved_df, n), range(nb_threads))
+    best = res[0]
+    print(res)
+    for r in res[1:nb_threads]:
+        if r[0] > best[0]:
+            best = r
     return best
 
 
