@@ -101,7 +101,8 @@ def evolutionary(saved_df, n, verbose=False, ratio=0.5, nb_it=1000):
         sample = sample1.join(sample2)
     return best
 
-def evolutionary_wrapper(saved_df, n, ratio, w_single, prev_best, best, nb_threads, id):
+def evolutionary_wrapper(n, ratio, w_single, prev_best, best, nb_threads, id):
+    saved_df = global_saved_df
     np.random.seed(id)
     if np.random.rand() < 1/nb_threads: #a small chance that the overall best is taken
         sample = saved_df[best[1]]
@@ -129,20 +130,23 @@ def p_evolutionary(saved_df, n, verbose=False, ratio=0.5, nb_it=300, nb_threads=
     best = n_best(saved_df, n)
     prev_best = best
     w_single = np.power(saved_df.sum(),2)
+    global global_saved_df
+    global_saved_df = saved_df
     with Pool(nb_threads) as p:
-        for i in range(nb_it):
-            print(i)
-            res = p.map(partial(evolutionary_wrapper, saved_df, n, ratio,
+        i = 0
+        while i < nb_it/nb_threads:
+            res = p.map(partial(evolutionary_wrapper, n, ratio,
                         w_single, prev_best, best, nb_threads), range(nb_threads))
-        gen_best = res[0]
-        for r in res[1:nb_threads]:
-            if r[0] > gen_best[0]:
-                gen_best = r
-        if gen_best[0] > best[0]:
-            best = gen_best
-            if verbose:
-                print(best)
-        prev_best = gen_best
+            gen_best = res[0]
+            for r in res[1:nb_threads]:
+                if r[0] > gen_best[0]:
+                    gen_best = r
+            if gen_best[0] > best[0]:
+                best = gen_best
+                i=0
+                if verbose:
+                    print(best)
+            prev_best = gen_best
     return best
 
 
