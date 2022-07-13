@@ -51,20 +51,10 @@ if __name__ == "__main__":
     verbose = args.verbose
     sample_rate = args.sample
 
-    with open(yml_path, "r") as yml_file:
-        cfg = yaml.safe_load(yml_file)
-    data_path = os.path.abspath(cfg["data_path"])
-    processed_path = os.path.abspath(cfg["processed_path"])
-    dest_dep = cfg["dest_dep"]
-    if "orig_dep" in cfg.keys():
-        orig_dep = cfg["orig_dep"]
-        dest_dep.extend(orig_dep)
-        departments = list(set(dest_dep))
-    else:
-        orig_dep = dest_dep
-        departments = dest_dep
+    data_path, processed_path, orig_dep, dest_dep, departments, municipalities_list,\
+    pop_src, exclude, matsim_conf, presel_functions,optimizations, nb_offices,\
+    isochrones, minimals = utils.parse_cfg(yml_path)
 
-    municipalities_list = utils.load_muni_list(cfg)
 
     if not os.path.isdir(processed_path):
         os.mkdir(processed_path)
@@ -81,41 +71,12 @@ if __name__ == "__main__":
 
     pop_path = f"{processed_path}/persons.feather"
     if not os.path.isfile(pop_path):
-        pop_src = cfg["pop"]
         df_pop = getattr(pop, f"get_{pop_src}_population")(data_path,
                     orig_dep=orig_dep, dest_dep=dest_dep, municipalities=municipalities_list)
         df_pop.reset_index(drop=True).to_feather(pop_path)
     df_pop = pd.read_feather(pop_path)
 
-    exclude = cfg["exclude"]
-    matsim_conf = os.path.abspath(cfg["matsim_conf"])
     r = router.Router(data_path, processed_path, exclude, matsim_conf)
-
-    if "preselection" in cfg.keys():
-        presel_functions = cfg["preselection"]
-        if type(presel_functions) != list:
-            presel_functions = [presel_functions]
-    else:
-        presel_functions = ["all"]
-
-    if "optimizer" in cfg.keys():
-        optimizations = cfg["optimizer"]
-        if type(optimizations) != list:
-            optimizations = [optimizations]
-    else:
-        optimizations = []
-
-    nb_offices = cfg["nb_offices"]
-    if type(nb_offices) != list:
-        nb_offices = [nb_offices]
-
-    isochrones = cfg["isochrone"]
-    if type(isochrones) != list:
-        isochrones = [isochrones]
-
-    minimals = cfg["min"]
-    if type(minimals) != list:
-        minimals = [minimals]
 
     for iso, min, presel in product(isochrones, minimals, presel_functions):
         saved_df_w = r.get_saved_distance(iso, min, presel)
