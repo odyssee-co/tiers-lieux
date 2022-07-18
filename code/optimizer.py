@@ -2,6 +2,7 @@ import numpy as np
 import pyomo.environ as pyo
 from multiprocessing import Pool
 from functools import partial
+import time, math, os
 
 
 def eval(saved_df):
@@ -60,6 +61,39 @@ def random_weighted(saved_df, n, verbose=False, nb_it=3000):
                 print(best)
     return best
 
+def random_weighted_worker(n, id):
+    np.random.seed((os.getpid() * int(time.time())) % 123456789)
+    w = global_w
+    saved_df = global_saved_df
+    sample = saved_df.sample(n, axis=1, weights=w)
+    res = eval(sample)
+    return (res, list(sample.columns))
+
+def p_random_weighted(saved_df, n, verbose=False, nb_it=3000, nb_threads=10):
+    """
+    Parallel implementation of the random_weighted algorithm .
+    """
+    global global_saved_df
+    global global_w
+    best = n_best(saved_df, n)
+    global_w = np.sqrt(saved_df.sum()) #weight is the total distance a single office would saved; sqrt to favor novelties
+    global_saved_df = saved_df
+    with Pool(nb_threads) as p:
+        i = 0
+        while i < nb_it/nb_threads:
+            res = p.map(partial(random_weighted_worker, n), range(nb_threads))
+            gen_best = res[0]
+            for r in res[1:nb_threads]:
+                if r[0] > gen_best[0]:
+                    gen_best = r
+            if gen_best[0] > best[0]:
+                best = gen_best
+                i=0
+                if verbose:
+                    print(best)
+            i += 1
+    return best
+
 
 def evolutionary(saved_df, n, verbose=False, ratio=0.5, nb_it=1000):
     """
@@ -101,9 +135,9 @@ def evolutionary(saved_df, n, verbose=False, ratio=0.5, nb_it=1000):
         sample = sample1.join(sample2)
     return best
 
-def evolutionary_wrapper(n, ratio, w_single, prev_best, nb_threads, id):
+def evolutionary_worker(n, ratio, prev_best, id):
     saved_df = global_saved_df
-    np.random.seed(id)
+    np.random.seed((os.getpid() * int(time.time())) % 123456789)
     sample = saved_df[prev_best[1]]
     nb_to_keep = round(n * ratio)
     s = sample[sample.sum(axis=1)>0]
@@ -115,7 +149,7 @@ def evolutionary_wrapper(n, ratio, w_single, prev_best, nb_threads, id):
         else:
             w.append(0.1)
     sample1 = sample.sample(nb_to_keep, axis=1, weights = w) #we keep a ratio of the pop with a higher prob for best performing
-    sample2 = saved_df.drop(sample.columns, axis=1).sample(n-nb_to_keep, axis=1, weights=w_single.drop(sample.columns)) #we complete with random in the remainings pop
+    sample2 = saved_df.drop(sample.columns, axis=1).sample(n-nb_to_keep, axis=1, weights=global_w_single.drop(sample.columns)) #we complete with random in the remainings pop
     sample = sample1.join(sample2)
     res = eval(sample)
     return (res, list(sample.columns))
@@ -124,16 +158,16 @@ def p_evolutionary(saved_df, n, verbose=False, ratio=0.5, nb_it=1000, nb_threads
     """
     Parallel implementation of the Evolutionary algorithm .
     """
+    global global_saved_df
+    global global_w_single
     best = n_best(saved_df, n)
     prev_best = best
-    w_single = np.power(saved_df.sum(),2)
-    global global_saved_df
     global_saved_df = saved_df
+    global_w_single = np.power(saved_df.sum(),2)
     with Pool(nb_threads) as p:
         i = 0
         while i < nb_it/nb_threads:
-            res = p.map(partial(evolutionary_wrapper, n, ratio,
-                        w_single, prev_best, nb_threads), range(nb_threads))
+            res = p.map(partial(evolutionary_worker, n, ratio, prev_best), np.arange(1, nb_threads+1))
             gen_best = res[0]
             for r in res[1:nb_threads]:
                 if r[0] > gen_best[0]:

@@ -55,7 +55,6 @@ if __name__ == "__main__":
     pop_src, exclude, matsim_conf, presel_functions,optimizations, nb_offices,\
     isochrones, minimals = utils.parse_cfg(yml_path)
 
-
     if not os.path.isdir(processed_path):
         os.mkdir(processed_path)
 
