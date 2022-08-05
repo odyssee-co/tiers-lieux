@@ -10,11 +10,11 @@ import router
 import matplotlib as mpl
 import numpy as np
 import matplotlib.pyplot as plt
-import yaml
 import dataframe_image as dfi
 import osmnx as ox
 import optimizer
 from itertools import product
+from matplotlib_scalebar.scalebar import ScaleBar
 
 mpl.rcParams['figure.figsize'] = [15, 15]
 
@@ -76,12 +76,19 @@ cmap = mpl.colors.ListedColormap(cmap[5:,:-1])
 #ax = m.plot(column="density", cmap=cmap, legend=True, scheme='user_defined', classification_kwds={'bins':[10,100,500,2000]})
 ax = m.plot(column="density", cmap=cmap, legend=True, scheme="JenksCaspall", k=6, zorder=1)
 ax.get_legend().set_title("Population")
-departments.plot(ax=ax, facecolor='none', edgecolor='black', linewidth=1, zorder=2)
+departments.plot(ax=ax, facecolor='none', edgecolor='black', linewidth=1, zorder=5)
 ax.set_axis_off()
 
 #road network
 roads[roads.highway!="secondary"].plot(ax=ax, color="white", linewidth=1, alpha=0.4, zorder=3)
 roads[roads.highway=="secondary"].plot(ax=ax, color="white", linewidth=0.5, alpha=0.4, zorder=4)
+
+pref  = ["Foix", "Montauban", "Albi", "Carcassonne", "Toulouse", "Auch"]
+for i, p in m[m.nom.isin(pref)].iterrows():
+    plt.text(p.x+0.5, p.y+0.5, p.nom, fontsize=10, color="black", alpha=1,
+    horizontalalignment='center', verticalalignment='center', zorder=6,
+    bbox=dict(facecolor='white', edgecolor='black', boxstyle='round,pad=0.3', alpha=0.8))
+ax.add_artist(ScaleBar(1, location="lower right"))
 plt.savefig(f"{processed_path}/basemap.png", bbox_inches='tight')
 
 
@@ -122,6 +129,8 @@ for iso, min, presel, opt, n in product(isochrones, minimals, presel_functions, 
     df = df.append(total, ignore_index=True)
     df["attractiveness"] = df["attractiveness"].astype(int)
     df["saved_distance_km"] = df["saved_distance_km"].astype(int)
+    print(df[["label", "attractiveness", "saved_distance_km",
+                "saved_distance_per_person_km"]].to_string(index=False))
     dfi.export(df[["label", "attractiveness", "saved_distance_km",
                 "saved_distance_per_person_km"]], f"{processed_path}/tab{suffix}.png")
 
@@ -202,7 +211,6 @@ for iso, min, presel, opt, n in product(isochrones, minimals, presel_functions, 
         print(f"opti: {optimizer.eval(saved_df[res[1]])}")
         print(f"top_10: {optimizer.eval(saved_df[top_10])}")
 
-    """
     #hérisson
     df = persons_df.join(saved_df_res.idxmax(axis=1).rename("cw_id"))
     df = df[saved_df_res.max(axis=1)>0]
@@ -214,15 +222,19 @@ for iso, min, presel, opt, n in product(isochrones, minimals, presel_functions, 
     df = gpd.GeoDataFrame(df)
     df["geometry_orig"] = df.geometry_orig.centroid
     df["geometry_dest"] = df.geometry_dest.centroid
-    ax = m.plot()
+    ax = departments.plot(facecolor='none', edgecolor='black', linewidth=1, zorder=2)
+    roads[roads.highway!="secondary"].plot(ax=ax, color="black", linewidth=1, alpha=0.2, zorder=3)
+    roads[roads.highway=="secondary"].plot(ax=ax, color="black", linewidth=0.5, alpha=0.2, zorder=4)
+    ax.set_axis_off()
+    max_n = df.weight.max()
+    print(df.weight.sum())
     for x_orig, x_dest, y_orig, y_dest, n in zip(
         df.geometry_orig.x, df.geometry_dest.x, df.geometry_orig.y, df.geometry_dest.y,
         df.weight):
-            ax.plot([x_orig , x_dest], [y_orig, y_dest], color="red", alpha=0.4)
+            ax.plot([x_orig , x_dest], [y_orig, y_dest], color="blue", linewidth=0.1+3*n/max_n, alpha=1)
     ax.set_axis_off()
     plt.savefig(f"{processed_path}/herisson{suffix}.png", bbox_inches='tight')
 
-    """
 print(f"nb_persons = {nb_persons}")
 """
 # Plot labels
