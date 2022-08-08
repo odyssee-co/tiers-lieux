@@ -112,7 +112,11 @@ class Router:
             df = routed_df[routed_df["origin_id"]==routed_df["destination_id"]]
             """
             if presel_func:
-                offices_id = getattr(preselection, f"{presel_func}")(self.processed_path, exclude)
+                args = [self.processed_path, exclude]
+                presel_func = presel_func.split("*")
+                for a in presel_func[1:]:
+                    args.append(a)
+                offices_id = getattr(preselection, f"{presel_func[0]}")(*args)
             else:
                 offices_id = population.origin_id.unique()
             routed_df.set_index(["origin_id", "destination_id"], inplace=True)

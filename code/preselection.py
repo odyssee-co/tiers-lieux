@@ -83,6 +83,7 @@ def dbscan(processed_path, exclude=[], eps=4000, min_samples=500,
     eps: maximum distance between two samples for them to be considered as in the same neighborhood.
     min_samples: number of samples (or total weight) in a neighborhood for a point to be considered as a core point. This includes the point itself.
     """
+    eps=int(eps)
     persons_df = pd.read_feather(processed_path+"/persons.feather")
     persons_df = persons_df[persons_df["origin_id"]
                                     != persons_df["destination_id"]]
