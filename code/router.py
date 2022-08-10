@@ -94,7 +94,7 @@ class Router:
                    "pt_travel_time"]=municipalities_df.avg_d_intra.values*1000/3600
             routed_df.reset_index(drop=True).to_feather(routed_intra_path)
         else:
-            routed_df = pd.read_feather(f"{self.processed_path}/routed_intra.feather")
+            routed_df = pd.read_feather(routed_intra_path)
         return routed_df
 
 
@@ -113,7 +113,6 @@ class Router:
             isochrone *= 60
             min_saved *= 60
             routed_df = self.get_routed_intra()
-            from IPython import embed; embed()
 
             population = pd.read_feather(f"{self.processed_path}/persons.feather")
             #routed_df = routed_df[routed_df["origin_id"].isin(population.origin_id)]
