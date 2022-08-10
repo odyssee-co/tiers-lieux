@@ -6,13 +6,15 @@ exclude : ["31555"]
 
 matsim_conf : ../data/matsim-conf/toulouse_config.xml
 
-# population source (insee | hr)
+#population source (insee | hr)
 pop : insee
 
 # Maximum travel time (in min) for an employee to consider this office
-isochrone : 15
+isochrone : [30]
 
 # Minimum saved time (in min) for an employee to choose an office
 min : 10
 
-preselection: top_50
+preselection: ["all"]
+nb_offices: [20]
+optimizer: ["p_evolutionary"]

@@ -72,16 +72,29 @@ class Router:
         routed_df.rename(columns={"person_id":"origin_id",
                                   "office_id":"destination_id"},
                                    inplace=True)
-        municipalities_df = gpd.read_file(f"{self.processed_path}/communes.gpkg",
-                                              dtype={"commune_id":str})
-        routed_df.loc[routed_df.origin_id==routed_df.destination_id,
-                        "car_distance"]=municipalities_df.avg_d_intra.values
-        routed_df.loc[routed_df.origin_id==routed_df.destination_id,
-               "car_travel_time"]=municipalities_df.avg_d_intra.values*1000/3600
-        routed_df.loc[routed_df.origin_id==routed_df.destination_id,
-                        "pt_distance"]=municipalities_df.avg_d_intra.values
-        routed_df.loc[routed_df.origin_id==routed_df.destination_id,
-               "pt_travel_time"]=municipalities_df.avg_d_intra.values*1000/3600
+        return routed_df
+
+    def get_routed_intra(self):
+        """
+        Add estimation of the traveled distances and times if the origin
+        municipality is the same than the destination municipality
+        """
+        routed_intra_path = f"{self.processed_path}/routed_intra.feather"
+        if not os.path.isfile(routed_intra_path):
+            routed_df = self.get_routed()
+            municipalities_df = gpd.read_file(f"{self.processed_path}/communes.gpkg",
+                                                  dtype={"commune_id":str})
+            routed_df.loc[routed_df.origin_id==routed_df.destination_id,
+                            "car_distance"]=municipalities_df.avg_d_intra.values
+            routed_df.loc[routed_df.origin_id==routed_df.destination_id,
+                   "car_travel_time"]=municipalities_df.avg_d_intra.values*1000/3600
+            routed_df.loc[routed_df.origin_id==routed_df.destination_id,
+                            "pt_distance"]=municipalities_df.avg_d_intra.values
+            routed_df.loc[routed_df.origin_id==routed_df.destination_id,
+                   "pt_travel_time"]=municipalities_df.avg_d_intra.values*1000/3600
+            routed_df.reset_index(drop=True).to_feather(routed_intra_path)
+        else:
+            routed_df = pd.read_feather(f"{self.processed_path}/routed_intra.feather")
         return routed_df
 
 
@@ -99,7 +112,8 @@ class Router:
             print(f"Processing matrix ({isochrone}, {min_saved}, {presel_func})...")
             isochrone *= 60
             min_saved *= 60
-            routed_df = self.get_routed()
+            routed_df = self.get_routed_intra()
+            from IPython import embed; embed()
 
             population = pd.read_feather(f"{self.processed_path}/persons.feather")
             #routed_df = routed_df[routed_df["origin_id"].isin(population.origin_id)]
