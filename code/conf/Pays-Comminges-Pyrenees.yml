@@ -3,7 +3,7 @@ processed_path : ../data/processed/Pays-Comminges-Pyrenees
 
 municipality_file: ../data/territories/Pays-Comminges-Pyrenees_insee.txt
 
-departments: ["31"]
+dest_dep: ["31"]
 exclude : []
 
 matsim_conf : ../data/matsim-conf/toulouse_config.xml
@@ -19,3 +19,7 @@ isochrone : 15
 min : 10
 
 sub_territories : ["conf/Coeur-et-Coteaux-du-Comminges.yml", "conf/Pyrenees-Haut-Garonnaise.yml", "conf/Cagire-Garonne-Salat.yml"]
+
+preselection: all
+nb_offices: 5
+optimizer: ["p_evolutionary"]

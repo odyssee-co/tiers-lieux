@@ -10,9 +10,11 @@ matsim_conf : ../data/matsim-conf/ile_de_france_config.xml
 pop : insee
 
 # Maximum travel time (in min) for an employee to consider this office
-isochrone : 15
+isochrone : [15, 30, 60]
 
 # Minimum saved time (in min) for an employee to choose an office
 min : 10
 
-preselection: top_50
+preselection: ["top_50", "dbscan*3000", "density_centers", "all"]
+nb_offices: [5, 10, 15, 20, 25, 30]
+optimizer: ["random_weighted", "mip", "p_evolutionary"]
