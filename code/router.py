@@ -126,7 +126,7 @@ class Router:
             df = routed_df[routed_df["origin_id"]==routed_df["destination_id"]]
             """
             if presel_func:
-                args = [self.processed_path, exclude]
+                args = [self.processed_path, self.office_dep, exclude]
                 presel_func = presel_func.split("*")
                 for a in presel_func[1:]:
                     args.append(a)
