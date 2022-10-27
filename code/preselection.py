@@ -6,14 +6,16 @@ from sklearn.neighbors import KernelDensity
 import numpy as np
 import math
 
-def all(processed_path, exclude=[]):
+def all(processed_path, office_dep=None, exclude=[]):
     """
     Return all municipalities minus the one in exclude.
     """
     municipalities = gpd.read_file(f"{processed_path}/communes.gpkg")
+    if office_dep:
+        municipalities = municipalities.commune_id.str[:2].isin(office_dep)
     return list(set(municipalities.commune_id) - set(exclude))
 
-def top_50(processed_path, exclude=[]):
+def top_50(processed_path, office_dep=None, exclude=[]):
     """
     Return the top 50 municipalities with the most inhabitants
     leaving every days to go to work in another communes.
@@ -22,12 +24,13 @@ def top_50(processed_path, exclude=[]):
     persons_df = persons_df[persons_df["origin_id"]
                                     != persons_df["destination_id"]]
     persons_df = persons_df[~persons_df.origin_id.isin(exclude)]
-
+    if office_dep:
+        persons_df = persons_df[persons_df.origin_id.str[:2].isin(office_dep)]
     return list(persons_df.groupby("origin_id").sum().sort_values(
                                           "weight", ascending=False)[:50].index)
 
 
-def adbscan(processed_path, exclude=[], eps=4000, min_samples=500,
+def adbscan(processed_path, office_dep=None, exclude=[], eps=4000, min_samples=500,
                     verbose=True):
     """
     Return the top adbscan cluster centres with the most inhabitants
@@ -39,7 +42,8 @@ def adbscan(processed_path, exclude=[], eps=4000, min_samples=500,
     persons_df = persons_df[persons_df["origin_id"]
                                     != persons_df["destination_id"]]
     persons_df = persons_df[~persons_df.origin_id.isin(exclude)]
-
+    if office_dep:
+        persons_df = persons_df[persons_df.origin_id.str[:2].isin(office_dep)]
     df = persons_df.groupby("origin_id").sum()
     municipalities = gpd.read_file(f"{processed_path}/communes.gpkg")
     pop_df = df.merge(municipalities, how="left", left_on="origin_id",
@@ -47,13 +51,11 @@ def adbscan(processed_path, exclude=[], eps=4000, min_samples=500,
     pop_df.rename(columns={"x":"X", "y":"Y"}, inplace=True)
     adbs = ADBSCAN(eps, min_samples, pct_exact=1, keep_solus=True)
     adbs.fit(pop_df, sample_weight=pop_df["weight"])
-
     if verbose:
         print("top_50_adbs:")
         print(f"  nb_muni: {len(municipalities)}")
         print(f"  nb_kernels: {len(set(adbs.votes.lbls))-1}")
         print(f"  nb_classified: {len(adbs.votes[adbs.votes['lbls'].astype('int')>0])}")
-
     df = pop_df[["weight", "geometry"]].join(adbs.votes.lbls)
     df = df[df.lbls!="-1"]
     df = gpd.geodataframe.GeoDataFrame(df).dissolve(by="lbls", aggfunc="sum")
@@ -75,7 +77,7 @@ def adbscan(processed_path, exclude=[], eps=4000, min_samples=500,
             break
     return best
 
-def dbscan(processed_path, exclude=[], eps=4000, min_samples=500,
+def dbscan(processed_path, office_dep=None, exclude=[], eps=4000, min_samples=500,
                     verbose=True):
     """
     Return the top dbscan cluster centres with the most inhabitants
@@ -88,7 +90,8 @@ def dbscan(processed_path, exclude=[], eps=4000, min_samples=500,
     persons_df = persons_df[persons_df["origin_id"]
                                     != persons_df["destination_id"]]
     persons_df = persons_df[~persons_df.origin_id.isin(exclude)]
-
+    if office_dep:
+        persons_df = persons_df[persons_df.origin_id.str[:2].isin(office_dep)]
     df = persons_df.groupby("origin_id").sum()
     municipalities = gpd.read_file(f"{processed_path}/communes.gpkg")
     pop_df = df.merge(municipalities, how="left", left_on="origin_id",
@@ -120,7 +123,7 @@ def dbscan(processed_path, exclude=[], eps=4000, min_samples=500,
     return best
 
 
-def kmeans(processed_path, exclude=[], verbose=True):
+def kmeans(processed_path, office_dep=None, exclude=[], verbose=True):
     """
     Return the k-means
     """
@@ -128,6 +131,8 @@ def kmeans(processed_path, exclude=[], verbose=True):
     persons_df = persons_df[persons_df["origin_id"]
                                     != persons_df["destination_id"]]
     persons_df = persons_df[~persons_df.origin_id.isin(exclude)]
+    if office_dep:
+        persons_df = persons_df[persons_df.origin_id.str[:2].isin(office_dep)]
 
     df = persons_df.groupby("origin_id").sum()
     municipalities = gpd.read_file(f"{processed_path}/communes.gpkg")
@@ -155,7 +160,7 @@ def kmeans(processed_path, exclude=[], verbose=True):
     return best
 
 
-def kde(processed_path, exclude=[], verbose=True, bandwidth=15000):
+def kde(processed_path, office_dep=None, exclude=[], verbose=True, bandwidth=15000):
     """
     Return top_50 municipalities with highest score on a kernel density estimation
     """
@@ -163,6 +168,8 @@ def kde(processed_path, exclude=[], verbose=True, bandwidth=15000):
     persons_df = persons_df[persons_df["origin_id"]
                                     != persons_df["destination_id"]]
     persons_df = persons_df[~persons_df.origin_id.isin(exclude)]
+    if office_dep:
+        persons_df = persons_df[persons_df.origin_id.str[:2].isin(office_dep)]
 
     df = persons_df.groupby("origin_id").sum()
     municipalities = gpd.read_file(f"{processed_path}/communes.gpkg")
@@ -179,7 +186,7 @@ def kde(processed_path, exclude=[], verbose=True, bandwidth=15000):
     return list(df.commune_id)[:50]
 
 
-def density_centers(processed_path, exclude=[], verbose=True, iso=15):
+def density_centers(processed_path, office_dep=None, exclude=[], verbose=True, iso=15):
     """
     Return top_50 municipalities with highest score on a kernel density estimation
     """
@@ -195,6 +202,8 @@ def density_centers(processed_path, exclude=[], verbose=True, iso=15):
     persons_df = persons_df[persons_df["origin_id"]
                                     != persons_df["destination_id"]]
     persons_df = persons_df[~persons_df.origin_id.isin(exclude)]
+    if office_dep:
+        persons_df = persons_df[persons_df.origin_id.str[:2].isin(office_dep)]
     persons_df = persons_df.groupby("origin_id").sum()
     weight = []
 

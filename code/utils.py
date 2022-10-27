@@ -23,6 +23,10 @@ def parse_cfg(yml_path):
     else:
         orig_dep = dest_dep
         departments = dest_dep
+    if "office_dep" in cfg.keys():
+        office_dep = cfg["office_dep"]
+    else:
+        office_dep = dest_dep
     municipalities_list = load_muni_list(cfg)
     pop_src = cfg["pop"]
     exclude = cfg["exclude"]
@@ -49,6 +53,6 @@ def parse_cfg(yml_path):
     if type(minimals) != list:
         minimals = [minimals]
 
-    return data_path, processed_path, orig_dep, dest_dep, departments,\
+    return data_path, processed_path, orig_dep, dest_dep, office_dep, departments,\
     municipalities_list, pop_src, exclude, matsim_conf, presel_functions,\
     optimizations, nb_offices, isochrones, minimals

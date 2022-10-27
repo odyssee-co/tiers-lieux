@@ -51,7 +51,7 @@ if __name__ == "__main__":
     verbose = args.verbose
     sample_rate = args.sample
 
-    data_path, processed_path, orig_dep, dest_dep, departments, municipalities_list,\
+    data_path, processed_path, orig_dep, dest_dep, office_dep, departments, municipalities_list,\
     pop_src, exclude, matsim_conf, presel_functions,optimizations, nb_offices,\
     isochrones, minimals = utils.parse_cfg(yml_path)
 
@@ -60,8 +60,7 @@ if __name__ == "__main__":
 
     communes_path = f"{processed_path}/communes.gpkg"
     if not os.path.isfile(communes_path):
-        df_communes = com.get_communes(data_path, municipalities=municipalities_list,
-                                       departments=departments)
+        df_communes = com.get_communes(data_path, departments=departments)
         df_communes.to_file(communes_path, driver = "GPKG")
     df_communes = gpd.read_file(communes_path, dtype={"commune_id":str})
     if len(municipalities_list) > 0:
@@ -78,7 +77,7 @@ if __name__ == "__main__":
         df_pop.reset_index(drop=True).to_feather(pop_path)
     df_pop = pd.read_feather(pop_path)
 
-    r = router.Router(data_path, processed_path, exclude, matsim_conf)
+    r = router.Router(data_path, processed_path, office_dep, exclude, matsim_conf)
 
     for iso, min, presel in product(isochrones, minimals, presel_functions):
         saved_df_w = r.get_saved_distance(iso, min, presel)

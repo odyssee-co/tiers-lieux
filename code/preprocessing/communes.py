@@ -33,7 +33,7 @@ def avg_d_within(poly, nb_it):
         sum += points[0].distance(points[1])
     return sum/nb_it
 
-def get_communes(data_path, municipalities=None, departments=[]):
+def get_communes(data_path, departments=[]):
     """
     return geo dataFrame with communes names, ids, geometry, and coordinates (x,y)
     df_communes: nom, commune_id, geometry, x, y

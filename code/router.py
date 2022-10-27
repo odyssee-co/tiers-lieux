@@ -11,11 +11,12 @@ class Router:
 
     jar_file = "flow-1.2.0.jar"
 
-    def __init__(self, data_path, processed_path, exclude, matsim_conf):
+    def __init__(self, data_path, processed_path, office_dep, exclude, matsim_conf):
         self.data_path = data_path
         self.processed_path = processed_path
         self.exclude = exclude
         self.matsim_conf = matsim_conf
+        self.office_dep = office_dep
 
     def compute_request(self):
         path = f"{self.processed_path}/request.csv"
@@ -132,6 +133,7 @@ class Router:
                 offices_id = getattr(preselection, f"{presel_func[0]}")(*args)
             else:
                 offices_id = population.origin_id.unique()
+                offices_id = offices_id[offices_id.origin_id.str[:2].isin(self.office_dep)]
             routed_df.set_index(["origin_id", "destination_id"], inplace=True)
 
             #calculate baseline car distance and check if user uses car anyway
