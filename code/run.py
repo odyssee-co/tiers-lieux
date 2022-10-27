@@ -64,7 +64,10 @@ if __name__ == "__main__":
                                        departments=departments)
         df_communes.to_file(communes_path, driver = "GPKG")
     df_communes = gpd.read_file(communes_path, dtype={"commune_id":str})
-    zone = df_communes[df_communes.commune_id.str[:2].isin(orig_dep)]
+    if len(municipalities_list) > 0:
+        zone = df_communes[df_communes.commune_id.isin(municipalities_list)]
+    else:
+        zone = df_communes[df_communes.commune_id.str[:2].isin(orig_dep)]
     zone_center = zone.dissolve().centroid.iloc[0]
     print(f"zone center: {zone_center.x}, {zone_center.y}")
 

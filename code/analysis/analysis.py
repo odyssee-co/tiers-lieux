@@ -70,6 +70,7 @@ nodes, roads = ox.graph_to_gdfs(graph)
 
 r = pd.read_csv(f"{processed_path}/res.csv", sep=";")
 
+"""
 #base map
 cmap = mpl.cm.Blues(np.linspace(0,1,20))
 cmap = mpl.colors.ListedColormap(cmap[5:,:-1])
@@ -78,11 +79,9 @@ ax = m.plot(column="density", cmap=cmap, legend=True, scheme="JenksCaspall", k=6
 ax.get_legend().set_title("Population")
 departments.plot(ax=ax, facecolor='none', edgecolor='black', linewidth=1, zorder=5)
 ax.set_axis_off()
-
 #road network
 roads[roads.highway!="secondary"].plot(ax=ax, color="white", linewidth=1, alpha=0.4, zorder=3)
 roads[roads.highway=="secondary"].plot(ax=ax, color="white", linewidth=0.5, alpha=0.4, zorder=4)
-
 pref  = ["Foix", "Montauban", "Albi", "Carcassonne", "Toulouse", "Auch"]
 for i, p in m[m.nom.isin(pref)].iterrows():
     plt.text(p.x+0.5, p.y+0.5, p.nom, fontsize=10, color="black", alpha=1,
@@ -90,6 +89,7 @@ for i, p in m[m.nom.isin(pref)].iterrows():
     bbox=dict(facecolor='white', edgecolor='black', boxstyle='round,pad=0.3', alpha=0.8))
 ax.add_artist(ScaleBar(1, location="lower right"))
 plt.savefig(f"{processed_path}/basemap.png", bbox_inches='tight')
+"""
 
 
 for iso, min, presel, opt, n in product(isochrones, minimals, presel_functions, optimizations, nb_offices):
@@ -115,7 +115,8 @@ for iso, min, presel, opt, n in product(isochrones, minimals, presel_functions, 
 
     df = municipalities_cum_saving.merge(municipalities_nb_chosen, on="idxmax")
     df.rename(columns={"max":"saved_distance_km", "weight":"attractiveness"}, inplace=True)
-    df["saved_distance_km"] /= 500
+    df["saved_distance_km"] /= 1000
+    df["saved_distance_km"] *= 2 #to take in account the return traject
     df = df.sort_values(by = "saved_distance_km", ascending = False)
     df["saved_distance_per_person_km"] = df["saved_distance_km"]/df["attractiveness"]
     df = df.reset_index()
@@ -131,25 +132,22 @@ for iso, min, presel, opt, n in product(isochrones, minimals, presel_functions, 
     df["saved_distance_km"] = df["saved_distance_km"].astype(int)
     print(df[["label", "attractiveness", "saved_distance_km",
                 "saved_distance_per_person_km"]].to_string(index=False))
-    dfi.export(df[["label", "attractiveness", "saved_distance_km",
-                "saved_distance_per_person_km"]], f"{processed_path}/tab{suffix}.png")
+    dfi.export(df[["label", "attractiveness", "saved_distance_km", "saved_distance_per_person_km"]], f"{processed_path}/tab{suffix}.png")
+    #dfi.export(df[:-1][["label", "attractiveness", "saved_distance_per_person_km"]], f"{processed_path}/tab{suffix}.png")
 
 
     #base map
-    """
     cmap = mpl.cm.Blues(np.linspace(0,1,20))
     cmap = mpl.colors.ListedColormap(cmap[5:,:-1])
     #ax = m.plot(column="density", cmap=cmap, legend=True, scheme='user_defined', classification_kwds={'bins':[10,100,500,2000]})
     ax = m.plot(column="density", cmap=cmap, legend=True, scheme="JenksCaspall", k=6, zorder=1)
     ax.get_legend().set_title("Population")
-    """
-    ax = departments.plot(facecolor='none', edgecolor='black', linewidth=1, zorder=2)
+    ax.add_artist(ScaleBar(1, location="lower right"))
+    departments.plot(ax=ax, facecolor='none', edgecolor='black', linewidth=1, zorder=2)
     ax.set_axis_off()
-
     #road network
-    roads[roads.highway!="secondary"].plot(ax=ax, color="black", linewidth=1, alpha=0.2, zorder=3)
-    roads[roads.highway=="secondary"].plot(ax=ax, color="black", linewidth=0.5, alpha=0.2, zorder=4)
-
+    roads[roads.highway!="secondary"].plot(ax=ax, color="white", linewidth=1, alpha=0.2, zorder=3)
+    roads[roads.highway=="secondary"].plot(ax=ax, color="white", linewidth=0.5, alpha=0.2, zorder=4)
     #municipalities
     if presel != "all":
         #saved_df_presel_w = router.get_saved_distance(presel_func)
@@ -157,10 +155,15 @@ for iso, min, presel, opt, n in product(isochrones, minimals, presel_functions, 
         preselected_muni = municipalities[municipalities["commune_id"].isin(saved_df.columns
         )].copy()
         preselected_muni["geometry"] = preselected_muni.centroid
-        preselected_muni.plot(ax=ax, color="orange", linewidth=3, zorder=10)
+        #preselected_muni.plot(ax=ax, color="orange", linewidth=3, zorder=10)
     chosen_muni = municipalities[municipalities["commune_id"].isin(res[1])].copy()
     chosen_muni["geometry"] = chosen_muni.centroid
     chosen_muni.plot(ax=ax, color="red", linewidth=5, zorder=20)
+    for i, row in chosen_muni.iterrows():
+        g = row.geometry
+        plt.text(g.x+0.5, g.y+2000, row.nom, fontsize=10, color="black", alpha=1,
+        horizontalalignment='center', verticalalignment='center', zorder=6,
+        bbox=dict(facecolor='white', edgecolor='black', boxstyle='round,pad=0.3', alpha=0.8))
     plt.axis('off')
     plt.savefig(f"{processed_path}/map{suffix}.png", bbox_inches='tight')
 

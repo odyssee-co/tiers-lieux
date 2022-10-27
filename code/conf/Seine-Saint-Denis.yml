@@ -15,4 +15,7 @@ isochrone : 15
 
 # Minimum saved time (in min) for an employee to choose an office
 min : 10
-preselection: None
+
+preselection: top_50
+nb_offices: 5
+optimizer: ["mip"]

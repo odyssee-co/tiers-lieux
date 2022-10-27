@@ -2,7 +2,7 @@ import os, yaml
 
 def load_muni_list(cfg):
     if "municipality_file" not in cfg.keys():
-        return None
+        return []
     municipalities_list = []
     municipality_file = cfg["municipality_file"]
     with open(municipality_file) as f:
