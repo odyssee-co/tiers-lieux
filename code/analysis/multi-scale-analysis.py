@@ -29,11 +29,11 @@ if "preselection" in cfg.keys():
 
 sub_territories = cfg["sub_territories"]
 sub_processed_paths = []
-sub_municipalities_lists = []
+sub_muni_origs = []
 for territories_conf in sub_territories:
         with open(territories_conf, "r") as yml_file:
             sub_cfg = yaml.safe_load(yml_file)
-        sub_municipalities_lists.append(utils.load_muni_list(sub_cfg))
+        sub_muni_origs.append(utils.load_muni_list(sub_cfg))
         sub_processed_paths.append(sub_cfg["processed_path"])
 
 r = router.Router(cfg)
@@ -43,9 +43,9 @@ weight = saved_df_w["weight"]
 nb_persons = weight.sum()
 
 municipalities = gpd.read_file(f"{processed_path}/communes.gpkg")
-municipalities_list = utils.load_muni_list(cfg)
-if municipalities_list:
-    municipalities = municipalities[municipalities["commune_id"].isin(municipalities_list)]
+muni_orig = utils.load_muni_list(cfg)
+if muni_orig:
+    municipalities = municipalities[municipalities["commune_id"].isin(muni_orig)]
 
 municipalities["department"] = municipalities["commune_id"].str[:2]
 departments = municipalities.dissolve("department").reset_index()
@@ -76,8 +76,8 @@ m = municipalities[municipalities["density"]!=0]
 ax = m.plot(column="density", cmap=cmap, legend=True, scheme="JenksCaspall", k=6, zorder=1)
 ax.get_legend().set_title("Population")
 departments.plot(ax=ax, facecolor='none', edgecolor='black', linewidth=1, zorder=2)
-for sub_municipalities_list in sub_municipalities_lists:
-    sub_municipalities = municipalities[municipalities["commune_id"].isin(sub_municipalities_list)]
+for sub_muni_orig in sub_muni_origs:
+    sub_municipalities = municipalities[municipalities["commune_id"].isin(sub_muni_orig)]
     sub_municipalities.dissolve().plot(ax=ax, facecolor='none', edgecolor='black', linewidth=2, zorder=3)
 
 

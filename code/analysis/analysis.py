@@ -19,7 +19,7 @@ from matplotlib_scalebar.scalebar import ScaleBar
 mpl.rcParams['figure.figsize'] = [15, 15]
 
 yml_path = sys.argv[1]
-data_path, processed_path, orig_dep, dest_dep, departments, municipalities_list,\
+data_path, processed_path, orig_dep, dest_dep, departments, muni_orig,\
 pop_src, exclude, matsim_conf, presel_functions,optimizations, nb_offices,\
 isochrones, minimals = utils.parse_cfg(yml_path)
 
@@ -33,8 +33,8 @@ router = router.Router(data_path, processed_path, exclude, matsim_conf)
 
 
 municipalities = gpd.read_file(f"{processed_path}/communes.gpkg")
-if municipalities_list:
-    municipalities = municipalities[municipalities["commune_id"].isin(municipalities_list)]
+if muni_orig:
+    municipalities = municipalities[municipalities["commune_id"].isin(muni_orig)]
 
 elif orig_dep:
     municipalities = municipalities[municipalities["commune_id"].str[:2].isin(orig_dep)]

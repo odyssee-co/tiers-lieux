@@ -51,7 +51,7 @@ if __name__ == "__main__":
     verbose = args.verbose
     sample_rate = args.sample
 
-    data_path, processed_path, orig_dep, dest_dep, office_dep, departments, municipalities_list,\
+    data_path, processed_path, orig_dep, dest_dep, office_dep, office_muni, departments, muni_orig,\
     pop_src, exclude, matsim_conf, presel_functions,optimizations, nb_offices,\
     isochrones, minimals = utils.parse_cfg(yml_path)
 
@@ -63,8 +63,8 @@ if __name__ == "__main__":
         df_communes = com.get_communes(data_path, departments=departments)
         df_communes.to_file(communes_path, driver = "GPKG")
     df_communes = gpd.read_file(communes_path, dtype={"commune_id":str})
-    if len(municipalities_list) > 0:
-        zone = df_communes[df_communes.commune_id.isin(municipalities_list)]
+    if len(muni_orig) > 0:
+        zone = df_communes[df_communes.commune_id.isin(muni_orig)]
     else:
         zone = df_communes[df_communes.commune_id.str[:2].isin(orig_dep)]
     zone_center = zone.dissolve().centroid.iloc[0]
@@ -73,11 +73,11 @@ if __name__ == "__main__":
     pop_path = f"{processed_path}/persons.feather"
     if not os.path.isfile(pop_path):
         df_pop = getattr(pop, f"get_{pop_src}_population")(data_path,
-                    orig_dep=orig_dep, dest_dep=dest_dep, municipalities=municipalities_list)
+                    orig_dep=orig_dep, dest_dep=dest_dep, municipalities=muni_orig)
         df_pop.reset_index(drop=True).to_feather(pop_path)
     df_pop = pd.read_feather(pop_path)
 
-    r = router.Router(data_path, processed_path, office_dep, exclude, matsim_conf)
+    r = router.Router(data_path, processed_path, office_dep, office_muni, exclude, matsim_conf)
 
     for iso, min, presel in product(isochrones, minimals, presel_functions):
         saved_df_w = r.get_saved_distance(iso, min, presel)

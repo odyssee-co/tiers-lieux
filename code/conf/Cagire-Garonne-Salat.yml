@@ -1,7 +1,7 @@
 data_path : ../data
 processed_path : ../data/processed/Cagire-Garonne-Salat
 
-municipality_file: ../data/territories/Cagire-Garonne-Salat_insee.txt
+muni_orig_file: ../data/territories/Cagire-Garonne-Salat_insee.txt
 
 departments: ["31"]
 exclude : []

@@ -1,14 +1,16 @@
 import os, yaml
 
+"""
 def load_muni_list(cfg):
-    if "municipality_file" not in cfg.keys():
+    if "muni_orig_file" not in cfg.keys():
         return []
-    municipalities_list = []
-    municipality_file = cfg["municipality_file"]
-    with open(municipality_file) as f:
+    muni_orig = []
+    muni_orig_file = cfg["muni_orig_file"]
+    with open(muni_orig_file) as f:
         for l in f:
-            municipalities_list.append(l.strip())
-    return municipalities_list
+            muni_orig.append(l.strip())
+    return muni_orig
+"""
 
 def parse_cfg(yml_path):
     with open(yml_path, "r") as yml_file:
@@ -27,7 +29,26 @@ def parse_cfg(yml_path):
         office_dep = cfg["office_dep"]
     else:
         office_dep = dest_dep
-    municipalities_list = load_muni_list(cfg)
+
+    if "muni_orig_file" not in cfg.keys():
+        muni_orig = []
+    else:
+        muni_orig = []
+        muni_orig_file = cfg["muni_orig_file"]
+        with open(muni_orig_file) as f:
+            for l in f:
+                muni_orig.append(l.strip())
+
+
+    if "office_muni_file" not in cfg.keys():
+        office_muni = []
+    else:
+        office_muni = []
+        office_muni_file = cfg["office_muni_file"]
+        with open(office_muni_file) as f:
+            for l in f:
+                office_muni.append(l.strip())
+
     pop_src = cfg["pop"]
     exclude = cfg["exclude"]
     matsim_conf = os.path.abspath(cfg["matsim_conf"])
@@ -53,6 +74,6 @@ def parse_cfg(yml_path):
     if type(minimals) != list:
         minimals = [minimals]
 
-    return data_path, processed_path, orig_dep, dest_dep, office_dep, departments,\
-    municipalities_list, pop_src, exclude, matsim_conf, presel_functions,\
+    return data_path, processed_path, orig_dep, dest_dep, office_dep, office_muni, \
+    departments, muni_orig, pop_src, exclude, matsim_conf, presel_functions,\
     optimizations, nb_offices, isochrones, minimals

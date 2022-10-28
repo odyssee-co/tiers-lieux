@@ -11,12 +11,13 @@ class Router:
 
     jar_file = "flow-1.2.0.jar"
 
-    def __init__(self, data_path, processed_path, office_dep, exclude, matsim_conf):
+    def __init__(self, data_path, processed_path, office_dep, office_muni, exclude, matsim_conf):
         self.data_path = data_path
         self.processed_path = processed_path
         self.exclude = exclude
         self.matsim_conf = matsim_conf
         self.office_dep = office_dep
+        self.office_muni= office_muni
 
     def compute_request(self):
         path = f"{self.processed_path}/request.csv"
@@ -126,11 +127,12 @@ class Router:
             df = routed_df[routed_df["origin_id"]==routed_df["destination_id"]]
             """
             if presel_func:
-                args = [self.processed_path, self.office_dep, exclude]
+                args = [self.processed_path, self.office_dep, self.office_muni, exclude]
                 presel_func = presel_func.split("*")
                 for a in presel_func[1:]:
                     args.append(a)
                 offices_id = getattr(preselection, f"{presel_func[0]}")(*args)
+                print(offices_id)
             else:
                 offices_id = population.origin_id.unique()
                 offices_id = offices_id[offices_id.origin_id.str[:2].isin(self.office_dep)]

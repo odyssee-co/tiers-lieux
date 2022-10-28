@@ -1,7 +1,7 @@
 data_path : ../data
 processed_path : ../data/processed/Pyrenees-Haut-Garonnaise
 
-municipality_file: ../data/territories/Pyrenees-Haut-Garonnaise_insee.txt
+muni_orig_file: ../data/territories/Pyrenees-Haut-Garonnaise_insee.txt
 
 departments: ["31"]
 exclude : []

@@ -1,7 +1,8 @@
 data_path : ../data
 processed_path : ../data/processed/Pays-Comminges-Pyrenees
 
-municipality_file: ../data/territories/Pays-Comminges-Pyrenees_insee.txt
+#muni_orig_file: ../data/territories/Pays-Comminges-Pyrenees_insee.txt
+office_muni_file: ../data/territories/Pays-Comminges-Pyrenees_insee.txt
 
 dest_dep: ["31"]
 exclude : []
@@ -22,4 +23,4 @@ sub_territories : ["conf/Coeur-et-Coteaux-du-Comminges.yml", "conf/Pyrenees-Haut
 
 preselection: all
 nb_offices: 5
-optimizer: ["p_evolutionary"]
+optimizer: ["mip"]

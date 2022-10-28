@@ -6,16 +6,18 @@ from sklearn.neighbors import KernelDensity
 import numpy as np
 import math
 
-def all(processed_path, office_dep=None, exclude=[]):
+def all(processed_path, office_dep=None, office_muni=None, exclude=[]):
     """
     Return all municipalities minus the one in exclude.
     """
     municipalities = gpd.read_file(f"{processed_path}/communes.gpkg")
     if office_dep:
         municipalities = municipalities.commune_id.str[:2].isin(office_dep)
+    if office_muni:
+        municipalities = municipalities.commune_id.isin(office_muni)
     return list(set(municipalities.commune_id) - set(exclude))
 
-def top_50(processed_path, office_dep=None, exclude=[]):
+def top_50(processed_path, office_dep=None, office_muni=None, exclude=[]):
     """
     Return the top 50 municipalities with the most inhabitants
     leaving every days to go to work in another communes.
@@ -26,11 +28,13 @@ def top_50(processed_path, office_dep=None, exclude=[]):
     persons_df = persons_df[~persons_df.origin_id.isin(exclude)]
     if office_dep:
         persons_df = persons_df[persons_df.origin_id.str[:2].isin(office_dep)]
+    if office_muni:
+        persons_df = persons_df[persons_df.origin_id.isin(office_muni)]
     return list(persons_df.groupby("origin_id").sum().sort_values(
                                           "weight", ascending=False)[:50].index)
 
 
-def adbscan(processed_path, office_dep=None, exclude=[], eps=4000, min_samples=500,
+def adbscan(processed_path, office_dep=None, office_muni=None, exclude=[], eps=4000, min_samples=500,
                     verbose=True):
     """
     Return the top adbscan cluster centres with the most inhabitants
@@ -44,6 +48,8 @@ def adbscan(processed_path, office_dep=None, exclude=[], eps=4000, min_samples=5
     persons_df = persons_df[~persons_df.origin_id.isin(exclude)]
     if office_dep:
         persons_df = persons_df[persons_df.origin_id.str[:2].isin(office_dep)]
+    if office_muni:
+        persons_df = persons_df[persons_df.origin_id.isin(office_muni)]
     df = persons_df.groupby("origin_id").sum()
     municipalities = gpd.read_file(f"{processed_path}/communes.gpkg")
     pop_df = df.merge(municipalities, how="left", left_on="origin_id",
@@ -77,7 +83,7 @@ def adbscan(processed_path, office_dep=None, exclude=[], eps=4000, min_samples=5
             break
     return best
 
-def dbscan(processed_path, office_dep=None, exclude=[], eps=4000, min_samples=500,
+def dbscan(processed_path, office_dep=None, office_muni=None, exclude=[], eps=4000, min_samples=500,
                     verbose=True):
     """
     Return the top dbscan cluster centres with the most inhabitants
@@ -92,6 +98,8 @@ def dbscan(processed_path, office_dep=None, exclude=[], eps=4000, min_samples=50
     persons_df = persons_df[~persons_df.origin_id.isin(exclude)]
     if office_dep:
         persons_df = persons_df[persons_df.origin_id.str[:2].isin(office_dep)]
+    if office_muni:
+        persons_df = persons_df[persons_df.origin_id.isin(office_muni)]
     df = persons_df.groupby("origin_id").sum()
     municipalities = gpd.read_file(f"{processed_path}/communes.gpkg")
     pop_df = df.merge(municipalities, how="left", left_on="origin_id",
@@ -123,7 +131,7 @@ def dbscan(processed_path, office_dep=None, exclude=[], eps=4000, min_samples=50
     return best
 
 
-def kmeans(processed_path, office_dep=None, exclude=[], verbose=True):
+def kmeans(processed_path, office_dep=None, office_muni=None, exclude=[], verbose=True):
     """
     Return the k-means
     """
@@ -133,6 +141,8 @@ def kmeans(processed_path, office_dep=None, exclude=[], verbose=True):
     persons_df = persons_df[~persons_df.origin_id.isin(exclude)]
     if office_dep:
         persons_df = persons_df[persons_df.origin_id.str[:2].isin(office_dep)]
+    if office_muni:
+        persons_df = persons_df[persons_df.origin_id.isin(office_muni)]
 
     df = persons_df.groupby("origin_id").sum()
     municipalities = gpd.read_file(f"{processed_path}/communes.gpkg")
@@ -160,7 +170,7 @@ def kmeans(processed_path, office_dep=None, exclude=[], verbose=True):
     return best
 
 
-def kde(processed_path, office_dep=None, exclude=[], verbose=True, bandwidth=15000):
+def kde(processed_path, office_dep=None, office_muni=None, exclude=[], verbose=True, bandwidth=15000):
     """
     Return top_50 municipalities with highest score on a kernel density estimation
     """
@@ -170,6 +180,8 @@ def kde(processed_path, office_dep=None, exclude=[], verbose=True, bandwidth=150
     persons_df = persons_df[~persons_df.origin_id.isin(exclude)]
     if office_dep:
         persons_df = persons_df[persons_df.origin_id.str[:2].isin(office_dep)]
+    if office_muni:
+        persons_df = persons_df[persons_df.origin_id.isin(office_muni)]
 
     df = persons_df.groupby("origin_id").sum()
     municipalities = gpd.read_file(f"{processed_path}/communes.gpkg")
@@ -186,7 +198,7 @@ def kde(processed_path, office_dep=None, exclude=[], verbose=True, bandwidth=150
     return list(df.commune_id)[:50]
 
 
-def density_centers(processed_path, office_dep=None, exclude=[], verbose=True, iso=15):
+def density_centers(processed_path, office_dep=None, office_muni=None, exclude=[], verbose=True, iso=15):
     """
     Return top_50 municipalities with highest score on a kernel density estimation
     """
@@ -197,13 +209,13 @@ def density_centers(processed_path, office_dep=None, exclude=[], verbose=True, i
                                                          "car_distance":float})
     routed_df = routed_df.rename(columns={"person_id":"origin_id",
                         "office_id":"destination_id", "car_distance":"distance"})
+    routed_df = routed_df[routed_df.origin_id.str[:2].isin(office_dep)]
+    routed_df = routed_df[routed_df.origin_id.isin(office_muni)]
     routed_df = routed_df.pivot("origin_id", "destination_id", "distance")
     persons_df = pd.read_feather(processed_path+"/persons.feather")
     persons_df = persons_df[persons_df["origin_id"]
                                     != persons_df["destination_id"]]
     persons_df = persons_df[~persons_df.origin_id.isin(exclude)]
-    if office_dep:
-        persons_df = persons_df[persons_df.origin_id.str[:2].isin(office_dep)]
     persons_df = persons_df.groupby("origin_id").sum()
     weight = []
 
@@ -217,7 +229,7 @@ def density_centers(processed_path, office_dep=None, exclude=[], verbose=True, i
         else:
             w=0
         for muni2, d in distances.iteritems():
-            if d < iso * 1000:
+            if d < iso * 1000: #TODO: should not compare distance with time
                 if muni2 in persons_df.index:
                     w += persons_df.loc[muni2].weight / math.log(math.e + d/1000)
         weight.append(w)
@@ -231,5 +243,5 @@ def density_centers(processed_path, office_dep=None, exclude=[], verbose=True, i
     to_remove = []
     for muni, distances in routed_df.iterrows():
         if muni not in to_remove:
-            to_remove.extend(routed_df[muni][distances<15000].index.drop(muni))
+            to_remove.extend(routed_df[muni][distances<15000].index.drop(muni)) #TODO: replace hardcoded 15000
     return list(routed_df.index.drop(to_remove))[:50]
