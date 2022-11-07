@@ -1,9 +1,7 @@
 data_path : ../data
 processed_path : ../data/processed/Seine-Saint-Denis
 
-dest_dep : ["75", "77", "78", "91", "92", "93", "94", "95"] 
-#orig_dep : ["93"] #pop 1.654M
-office_dep : ["93"] 
+dest_dep : ["93"] 
 exclude : []
 
 matsim_conf : ../data/matsim-conf/ile_de_france_config.xml

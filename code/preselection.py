@@ -12,9 +12,9 @@ def all(processed_path, office_dep=None, office_muni=None, exclude=[]):
     """
     municipalities = gpd.read_file(f"{processed_path}/communes.gpkg")
     if office_dep:
-        municipalities = municipalities.commune_id.str[:2].isin(office_dep)
+        municipalities = municipalities[municipalities.commune_id.str[:2].isin(office_dep)]
     if office_muni:
-        municipalities = municipalities.commune_id.isin(office_muni)
+        municipalities = municipalities[municipalities.commune_id.isin(office_muni)]
     return list(set(municipalities.commune_id) - set(exclude))
 
 def top_50(processed_path, office_dep=None, office_muni=None, exclude=[]):
@@ -209,8 +209,10 @@ def density_centers(processed_path, office_dep=None, office_muni=None, exclude=[
                                                          "car_distance":float})
     routed_df = routed_df.rename(columns={"person_id":"origin_id",
                         "office_id":"destination_id", "car_distance":"distance"})
-    routed_df = routed_df[routed_df.origin_id.str[:2].isin(office_dep)]
-    routed_df = routed_df[routed_df.origin_id.isin(office_muni)]
+    if office_dep:
+        routed_df = routed_df[routed_df.origin_id.str[:2].isin(office_dep)]
+    if office_muni:
+        routed_df = routed_df[routed_df.origin_id.isin(office_muni)]
     routed_df = routed_df.pivot("origin_id", "destination_id", "distance")
     persons_df = pd.read_feather(processed_path+"/persons.feather")
     persons_df = persons_df[persons_df["origin_id"]

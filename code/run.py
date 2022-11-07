@@ -16,6 +16,8 @@ import time
 def optimize(opt_func, n, iso, min, presel):
     if presel=="all" and opt_func=="mip":
         return
+    if opt_func == "mip*":
+        opt_func = "mip"
     res_path = f"{processed_path}/res.csv"
     if not os.path.exists(res_path):
         with open(res_path, "w") as f:

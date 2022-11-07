@@ -132,7 +132,6 @@ class Router:
                 for a in presel_func[1:]:
                     args.append(a)
                 offices_id = getattr(preselection, f"{presel_func[0]}")(*args)
-                print(offices_id)
             else:
                 offices_id = population.origin_id.unique()
                 offices_id = offices_id[offices_id.origin_id.str[:2].isin(self.office_dep)]

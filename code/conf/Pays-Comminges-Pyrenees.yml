@@ -23,4 +23,4 @@ sub_territories : ["conf/Coeur-et-Coteaux-du-Comminges.yml", "conf/Pyrenees-Haut
 
 preselection: all
 nb_offices: 5
-optimizer: ["mip"]
+optimizer: ["mip*", "p_evolutionary"]
