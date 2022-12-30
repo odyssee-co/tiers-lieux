@@ -39,6 +39,10 @@ def parse_cfg(yml_path):
             for l in f:
                 muni_orig.append(l.strip())
 
+    if "vacancy" not in cfg.keys():
+        vacancy_file = None
+    else:
+        vacancy_file = cfg["vacancy"]
 
     if "office_muni_file" not in cfg.keys():
         office_muni = []
@@ -75,5 +79,5 @@ def parse_cfg(yml_path):
         minimals = [minimals]
 
     return data_path, processed_path, orig_dep, dest_dep, office_dep, office_muni, \
-    departments, muni_orig, pop_src, exclude, matsim_conf, presel_functions,\
+    departments, muni_orig, vacancy_file, pop_src, exclude, matsim_conf, presel_functions,\
     optimizations, nb_offices, isochrones, minimals

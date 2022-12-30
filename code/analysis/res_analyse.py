@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-r = pd.read_csv("~/git/tiers-lieux/data/processed/Toulouse/res.csv", sep=";").iloc[:,:-1]
+r = pd.read_csv("~/git/tiers-lieux/data/processed/old/Toulouse/res.csv", sep=";").iloc[:,:-1]
 r = r.sort_values(by="saved_d", ascending=False)
 r = r.sort_values(by=["n", "iso"])
 r.saved_d*=2
@@ -25,13 +25,13 @@ for iso in [15, 30 , 60]:
     df = r[(r.presel=="all")&(r.iso==iso)&(r.optimizer=="p_evolutionary")]
     plt.plot(df.n, df.saved_d/1e9, label="evolutionary")
     df = r[(r.presel=="all")&(r.iso==iso)&(r.optimizer=="random_weighted")]
-    plt.plot(df.n, df.saved_d/1e9, label="random_weighted")
+    plt.plot(df.n, df.saved_d/1e9, label="Monte Carlo")
     df = r[(r.presel=="top_50")&(r.iso==iso)&(r.optimizer=="mip")]
-    plt.plot(df.n, df.saved_d/1e9, label="cbc")
+    plt.plot(df.n, df.saved_d/1e9, label="CBC")
     plt.legend()
     plt.xlabel('Number of selected offices $n$')
     plt.ylabel('Saved distance (Mio km)')
-    plt.axis((None,None,None,8))
+    plt.axis((None,None,None,6))
     plt.grid()
     plt.show()
 

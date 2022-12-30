@@ -11,13 +11,10 @@ class Router:
 
     jar_file = "flow-1.2.0.jar"
 
-    def __init__(self, data_path, processed_path, office_dep, office_muni, exclude, matsim_conf):
+    def __init__(self, data_path, processed_path, matsim_conf):
         self.data_path = data_path
         self.processed_path = processed_path
-        self.exclude = exclude
         self.matsim_conf = matsim_conf
-        self.office_dep = office_dep
-        self.office_muni= office_muni
 
     def compute_request(self):
         path = f"{self.processed_path}/request.csv"
@@ -100,12 +97,12 @@ class Router:
         return routed_df
 
 
-    def get_saved_distance(self, isochrone, min_saved, presel_func):
+    def get_saved_distance(self, isochrone, min_saved, presel_func, office_dep,
+                           office_muni, vacancy_file, exclude):
         """
         Return a dataframe containing for each employee, the time he would save working
         in each office (0 if the saved time if negative or inferior to min_saved).
         """
-        exclude = self.exclude
         path_saved = f"{self.processed_path}/saved_iso{isochrone}_min{min_saved}_{presel_func}.feather"
         if os.path.exists(path_saved):
             print(f"Loading matrix ({isochrone}, {min_saved}, {presel_func})...")
@@ -115,6 +112,7 @@ class Router:
             isochrone *= 60
             min_saved *= 60
             routed_df = self.get_routed_intra()
+            routed_df.set_index(["origin_id", "destination_id"], inplace=True)
 
             population = pd.read_feather(f"{self.processed_path}/persons.feather")
             #routed_df = routed_df[routed_df["origin_id"].isin(population.origin_id)]
@@ -126,16 +124,16 @@ class Router:
             municipalities_df["intra"] = municipalities_df["geometry"].apply(intra_car_travel_distance)
             df = routed_df[routed_df["origin_id"]==routed_df["destination_id"]]
             """
-            if presel_func:
-                args = [self.processed_path, self.office_dep, self.office_muni, exclude]
-                presel_func = presel_func.split("*")
-                for a in presel_func[1:]:
-                    args.append(a)
-                offices_id = getattr(preselection, f"{presel_func[0]}")(*args)
-            else:
-                offices_id = population.origin_id.unique()
-                offices_id = offices_id[offices_id.origin_id.str[:2].isin(self.office_dep)]
-            routed_df.set_index(["origin_id", "destination_id"], inplace=True)
+            if vacancy_file:
+                vacancy_df = pd.read_feather(vacancy_file)
+                office_muni = list(vacancy_df.idcom.unique())
+
+            #calling the preselection function
+            args = [self.processed_path, office_dep, office_muni, exclude]
+            presel_func = presel_func.split("*")
+            for a in presel_func[1:]:
+                args.append(a)
+            offices_id = getattr(preselection, f"{presel_func[0]}")(*args)
 
             #calculate baseline car distance and check if user uses car anyway
             saved_df = pd.DataFrame()

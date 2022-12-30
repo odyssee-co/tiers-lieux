@@ -54,7 +54,7 @@ if __name__ == "__main__":
     sample_rate = args.sample
 
     data_path, processed_path, orig_dep, dest_dep, office_dep, office_muni, departments, muni_orig,\
-    pop_src, exclude, matsim_conf, presel_functions,optimizations, nb_offices,\
+    vacancy_file, pop_src, exclude, matsim_conf, presel_functions,optimizations, nb_offices,\
     isochrones, minimals = utils.parse_cfg(yml_path)
 
     if not os.path.isdir(processed_path):
@@ -65,6 +65,7 @@ if __name__ == "__main__":
         df_communes = com.get_communes(data_path, departments=departments)
         df_communes.to_file(communes_path, driver = "GPKG")
     df_communes = gpd.read_file(communes_path, dtype={"commune_id":str})
+
     if len(muni_orig) > 0:
         zone = df_communes[df_communes.commune_id.isin(muni_orig)]
     else:
@@ -79,10 +80,11 @@ if __name__ == "__main__":
         df_pop.reset_index(drop=True).to_feather(pop_path)
     df_pop = pd.read_feather(pop_path)
 
-    r = router.Router(data_path, processed_path, office_dep, office_muni, exclude, matsim_conf)
+    r = router.Router(data_path, processed_path, matsim_conf)
 
     for iso, min, presel in product(isochrones, minimals, presel_functions):
-        saved_df_w = r.get_saved_distance(iso, min, presel)
+        saved_df_w = r.get_saved_distance(iso, min, presel, office_dep,
+                                          office_muni, vacancy_file, exclude)
         if sample_rate < 1:
             saved_df_w = saved_df_w.sample(round(saved_df_w.shape[0]*sample_rate))
         saved_df = saved_df_w.drop("weight", axis=1)
