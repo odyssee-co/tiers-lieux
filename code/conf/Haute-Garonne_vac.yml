@@ -1,0 +1,21 @@
+data_path : ../data
+processed_path : ../data/processed/Haute-Garonne_vac
+
+dest_dep : ["31"] 
+exclude : ["31555"]
+vacancy : ../data/territories/vacancy_09-11-31-32-81-82.feather
+
+matsim_conf : ../data/matsim-conf/toulouse_config.xml
+
+#population source (insee | hr)
+pop : insee
+
+# Maximum travel time (in min) for an employee to consider this office
+isochrone : [15]
+
+# Minimum saved time (in min) for an employee to choose an office
+min : 10
+
+preselection: ["all"]
+nb_offices: [10]
+optimizer: ["p_evolutionary"]
