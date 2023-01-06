@@ -1,9 +1,8 @@
 data_path : ../data
-processed_path : ../data/processed/Haute-Garonne_vac
+processed_path : ../data/processed/Haute-Garonne
 
 dest_dep : ["31"] 
 exclude : ["31555"]
-vacancy : ../data/territories/vacancy_09-11-31-32-81-82.feather
 
 matsim_conf : ../data/matsim-conf/toulouse_config.xml
 
