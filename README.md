@@ -2,6 +2,9 @@
 
 This repository contains the code used for implementing the methods described in our paper titled "Emission-reducing deployment of shared office networks". In this work, we present a generic method based on publicly available data to design a master plan for optimizing the number and placement of coworking spaces in a given area. Our goal is to reduce greenhouse gas emissions linked to car commuting by strategically placing coworking spaces and encouraging commuters to switch to more sustainable modes of transport.
 
+<p align="center">
+<img src="https://github.com/odyssee-co/tiers-lieux/blob/main/img/map_n10_iso30_min10_mip_dbscan.png" alt="Shared Office Networks for Toulouse area" width="500"/>
+</p>
 ## Overview
 
 Our approach involves three main stages:
