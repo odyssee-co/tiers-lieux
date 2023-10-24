@@ -59,7 +59,7 @@ class Router:
             command = [
                 shutil.which("java"),
                 "-cp", self.jar_file,
-                "-Xmx10G",
+                "-Xmx28G",
                 "org.eqasim.odyssee.RunBatchRouting",
                 "--config-path", self.matsim_conf,
                 "--input-path", req_path,
@@ -138,7 +138,7 @@ class Router:
             offices_id = getattr(preselection, f"{presel_func[0]}")(*args)
 
             #calculate baseline car distance and check if user uses car anyway
-            saved_df = pd.DataFrame()
+            saved_df = []
             for id, row in tqdm.tqdm(population.iterrows(),
                                      total=population.shape[0]):
                 origin, reg_office, weight = row
@@ -158,8 +158,9 @@ class Router:
                         if b_ct - ptt > min_saved:
                             saved_dist = b_cd * weight
                     saved[office] = saved_dist
-                saved = pd.Series(saved, name=id)
-                saved_df = saved_df.append(saved)
+                saved = pd.Series(saved, name=str(id))
+                saved_df.append(saved)
+            saved_df = pd.DataFrame(saved_df)
             saved_df.index.names = ["person_id"]
             saved_df.reset_index().to_feather(path_saved)
 

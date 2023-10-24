@@ -13,7 +13,7 @@ from itertools import product
 import time
 
 
-def optimize(opt_func, n, iso, min, presel):
+def optimize(opt_func, saved_df, n, iso, min, presel):
     if presel=="all" and opt_func=="mip":
         return
     if opt_func == "mip*":
@@ -95,7 +95,7 @@ if __name__ == "__main__":
             print("max saved distance per day and per employee: %.2f km\n"%max)
         if len(optimizations) > 0:
             for opt, n in product(optimizations, nb_offices):
-                optimize(opt, n, iso, min, presel)
+                optimize(opt, saved_df, n, iso, min, presel)
 
     if args.interactive:
         from IPython import embed; embed()
