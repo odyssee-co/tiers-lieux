@@ -7,11 +7,13 @@ import preselection
 import tqdm
 import geopandas as gpd
 
+#TODO: replace the equasim router used to calculate the time and distance matrices by the mobility referential
+
 class Router:
 
-    jar_file = "flow-1.2.0.jar"
 
     def __init__(self, data_path, processed_path, matsim_conf):
+        self.jar_file = "equasim-java/flow/target/flow-1.2.0.jar"
         self.data_path = data_path
         self.processed_path = processed_path
         self.matsim_conf = matsim_conf
@@ -56,8 +58,8 @@ class Router:
             print("Routing...")
             command = [
                 shutil.which("java"),
-                "-cp", f"{self.data_path}/{self.jar_file}",
-                "-Xmx28G",
+                "-cp", self.jar_file,
+                "-Xmx10G",
                 "org.eqasim.odyssee.RunBatchRouting",
                 "--config-path", self.matsim_conf,
                 "--input-path", req_path,

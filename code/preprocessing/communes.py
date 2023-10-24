@@ -39,12 +39,14 @@ def get_communes(data_path, departments=[]):
     df_communes: nom, commune_id, geometry, x, y
     """
     print("Processing municipalities...")
-    df_communes = gpd.read_file(data_path+"/iris/communes-20210101.shp", dtype={"insee":str})
+    df_communes = gpd.read_file(data_path+"/iris/communes-20220101.shp", dtype={"insee":str})
     df_communes = df_communes[["nom", "insee", "geometry"]]
-    arn_path = data_path+"/arrondissements/arrondissements-municipaux-20160128.shp"
-    df_arrondissements = gpd.read_file(arn_path, dtype={"insee":str})
+    """
+    arn_path = data_path+"/arrondissements.csv"
+    df_arrondissements = gpd.GeoDataFrame(pd.read_csv(arn_path, dtype={"insee":str}))
     df_arrondissements = df_arrondissements[["nom", "insee", "geometry"]]
-    df_communes = df_communes.append(df_arrondissements)
+    df_communes = gpd.GeoDataFrame(pd.concat([df_communes, df_arrondissements]))
+    """
     df_communes["department"] = df_communes["insee"].str[:2]
     df_communes = df_communes[df_communes["department"].isin(departments)]
     df_communes.geometry = df_communes.geometry.to_crs(2154)
