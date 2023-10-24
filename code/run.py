@@ -14,6 +14,18 @@ import time
 
 
 def optimize(opt_func, saved_df, n, iso, min, presel):
+    """
+    Optimize office locations based on specified parameters and optimization techniques.
+    Write the results in res.csv.
+
+    Parameters:
+    - opt_func (str): Name of the optimization function to use.
+    - saved_df (pd.DataFrame): DataFrame containing saved distances data.
+    - n (int): Number of offices to be selected.
+    - iso (float): Isochrone value for optimization.
+    - min (float): Minimal distance value for optimization.
+    - presel (str): Preselection function to apply.
+    """
     if presel=="all" and opt_func=="mip":
         return
     if opt_func == "mip*":
@@ -42,30 +54,36 @@ def optimize(opt_func, saved_df, n, iso, min, presel):
         print("average saved distance per day and per employee: %.2f km\n"%average)
 
 if __name__ == "__main__":
+    # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Run the optimizer")
     parser.add_argument("--conf", default="conf.yml", help="path to the configuraiton file")
     parser.add_argument("--verbose", "-v", action="store_true", help="verbose mode")
     parser.add_argument("--interactive", "-i", action="store_true", help="interactive mode")
     parser.add_argument("--sample", "-s", type=float, default=1, help="sample rate")
 
+    # Extract configuration parameters from the command-line arguments
     args=parser.parse_args()
     yml_path = args.conf
     verbose = args.verbose
     sample_rate = args.sample
 
+    # Load configuration settings from the specified YAML file
     data_path, processed_path, orig_dep, dest_dep, office_dep, office_muni, departments, muni_orig,\
     vacancy_file, pop_src, exclude, matsim_conf, presel_functions,optimizations, nb_offices,\
     isochrones, minimals = utils.parse_cfg(yml_path)
 
+    # Create processed data directory if it does not exist
     if not os.path.isdir(processed_path):
         os.mkdir(processed_path)
 
+    # Generate or load municipality data and population data
     communes_path = f"{processed_path}/communes.gpkg"
     if not os.path.isfile(communes_path):
         df_communes = com.get_communes(data_path, departments=departments)
         df_communes.to_file(communes_path, driver = "GPKG")
     df_communes = gpd.read_file(communes_path, dtype={"commune_id":str})
 
+    # Determine the zone centroid
     if len(muni_orig) > 0:
         zone = df_communes[df_communes.commune_id.isin(muni_orig)]
     else:
@@ -73,6 +91,7 @@ if __name__ == "__main__":
     zone_center = zone.dissolve().centroid.iloc[0]
     print(f"zone center: {zone_center.x}, {zone_center.y}")
 
+    # Generate or load population data
     pop_path = f"{processed_path}/persons.feather"
     if not os.path.isfile(pop_path):
         df_pop = getattr(pop, f"get_{pop_src}_population")(data_path,
@@ -80,8 +99,10 @@ if __name__ == "__main__":
         df_pop.reset_index(drop=True).to_feather(pop_path)
     df_pop = pd.read_feather(pop_path)
 
+    # Initialize the router for transportation data processing
     r = router.Router(data_path, processed_path, matsim_conf)
 
+    # Iterate over isochrones, minimums, and preselection functions for optimization
     for iso, min, presel in product(isochrones, minimals, presel_functions):
         saved_df_w = r.get_saved_distance(iso, min, presel, office_dep,
                                           office_muni, vacancy_file, exclude)

@@ -7,16 +7,31 @@ import time, math, os
 
 def eval(saved_df):
     """
-    Return the total saved distance if each employee chose the closest office
+    Evaluate the total saved distance if each employee chose the closest office
     amongst the subset selectedOffices.
+
+    Parameters:
+    - saved_df (pd.DataFrame): DataFrame containing saved distances data.
+
+    Returns:
+    - total_saved_distance (float): Total saved distance when employees choose
+                                   the closest office from the selected offices.
     """
     return saved_df.max(axis=1).sum()
 
 
 def n_best(saved_df, n):
     """
-    Return the n offices which would save the most travel time individualy
-    (useful to get a lower bound to the optimization problem).
+    Return the n offices that would save the most travel time individually,
+    useful to get a lower bound to the optimization problem.
+
+    Parameters:
+    - saved_df (pd.DataFrame): DataFrame containing saved distances data.
+    - n (int): Number of offices to select.
+
+    Returns:
+    - total_saved_distance (float): Total saved distance when selecting n best offices.
+    - selected_offices (list): List of n offices selected based on maximum saved distances.
     """
     n_best = list(saved_df.sum().sort_values(ascending=False).iloc[0:n].index)
     selectedOffices_df = saved_df.loc[:, n_best]
@@ -25,8 +40,17 @@ def n_best(saved_df, n):
 
 def random(saved_df, n, verbose=False, nb_it=3000):
     """
-    Randomly select a subset of offices, and return the best if nb_it iterations
-    passed without improving the result.
+    Randomly select a subset of offices and return the best subset if nb_it iterations
+    pass without improving the result.
+
+    Parameters:
+    - saved_df (pd.DataFrame): DataFrame containing saved distances data.
+    - n (int): Number of offices to select.
+    - verbose (bool, optional): Whether to print verbose output. Default is False.
+    - nb_it (int, optional): Number of iterations without improvement to stop the search. Default is 3000.
+
+    Returns:
+    - best_subset (tuple): Tuple containing the total saved distance and the list of selected offices.
     """
     best = n_best(saved_df, n)
     i = 0
@@ -45,7 +69,16 @@ def random(saved_df, n, verbose=False, nb_it=3000):
 def random_weighted(saved_df, n, verbose=False, nb_it=3000):
     """
     Randomly select a subset of offices weighted by their individual performances,
-    and return the best if nb_it iterations passed without improving the result.
+    and return the best subset if nb_it iterations pass without improving the result.
+
+    Parameters:
+    - saved_df (pd.DataFrame): DataFrame containing saved distances data.
+    - n (int): Number of offices to select.
+    - verbose (bool, optional): Whether to print verbose output. Default is False.
+    - nb_it (int, optional): Number of iterations without improvement to stop the search. Default is 3000.
+
+    Returns:
+    - best_subset (tuple): Tuple containing the total saved distance and the list of selected offices.
     """
     best = n_best(saved_df, n)
     i = 0
@@ -62,6 +95,16 @@ def random_weighted(saved_df, n, verbose=False, nb_it=3000):
     return best
 
 def random_weighted_worker(n, id):
+    """
+    Worker function for parallel random weighted selection algorithm.
+
+    Parameters:
+    - n (int): Number of offices to select.
+    - id (int): Worker ID for identification.
+
+    Returns:
+    - result (tuple): Tuple containing the total saved distance and the list of selected offices.
+    """
     np.random.seed((os.getpid() * int(time.time())) % 123456789)
     w = global_w
     saved_df = global_saved_df
@@ -71,7 +114,17 @@ def random_weighted_worker(n, id):
 
 def p_random_weighted(saved_df, n, verbose=False, nb_it=3000, nb_threads=10):
     """
-    Parallel implementation of the random_weighted algorithm .
+    Parallel implementation of the random_weighted algorithm.
+
+    Parameters:
+    - saved_df (pd.DataFrame): DataFrame containing saved distances data.
+    - n (int): Number of offices to select.
+    - verbose (bool, optional): Whether to print verbose output. Default is False.
+    - nb_it (int, optional): Number of iterations without improvement to stop the search. Default is 3000.
+    - nb_threads (int, optional): Number of parallel threads to use. Default is 10.
+
+    Returns:
+    - best_subset (tuple): Tuple containing the total saved distance and the list of selected offices.
     """
     global global_saved_df
     global global_w
@@ -97,9 +150,19 @@ def p_random_weighted(saved_df, n, verbose=False, nb_it=3000, nb_threads=10):
 
 def evolutionary(saved_df, n, verbose=False, ratio=0.5, nb_it=1000):
     """
-    Evolutionary algorithm that keep a ratio of the population weighted by their
-    performance in the current subset, and return the best if nb_it iterations
-    passed without improving the result.
+    Evolutionary algorithm that keeps a ratio of the population weighted by their
+    performance in the current subset and returns the best subset if nb_it iterations
+    pass without improving the result.
+
+    Parameters:
+    - saved_df (pd.DataFrame): DataFrame containing saved distances data.
+    - n (int): Number of offices to select.
+    - verbose (bool, optional): Whether to print verbose output. Default is False.
+    - ratio (float, optional): Ratio of the population to keep in each iteration. Default is 0.5.
+    - nb_it (int, optional): Number of iterations without improvement to stop the search. Default is 1000.
+
+    Returns:
+    - best_subset (tuple): Tuple containing the total saved distance and the list of selected offices.
     """
     best = n_best(saved_df, n)
     #sample = saved_df[best[1]]
@@ -136,6 +199,18 @@ def evolutionary(saved_df, n, verbose=False, ratio=0.5, nb_it=1000):
     return best
 
 def evolutionary_worker(n, ratio, prev_best, id):
+    """
+    Worker function for parallel evolutionary algorithm.
+
+    Parameters:
+    - n (int): Number of offices to select.
+    - ratio (float): Ratio of the population to keep in each iteration.
+    - prev_best (tuple): Previous best subset containing total saved distance and selected offices.
+    - id (int): Worker ID for identification.
+
+    Returns:
+    - result (tuple): Tuple containing the total saved distance and the list of selected offices.
+    """
     saved_df = global_saved_df
     np.random.seed((os.getpid() * int(time.time())) % 123456789)
     sample = saved_df[prev_best[1]]
@@ -156,7 +231,18 @@ def evolutionary_worker(n, ratio, prev_best, id):
 
 def p_evolutionary(saved_df, n, verbose=False, ratio=0.5, nb_it=1000, nb_threads=10):
     """
-    Parallel implementation of the Evolutionary algorithm .
+    Parallel implementation of the Evolutionary algorithm.
+
+    Parameters:
+    - saved_df (pd.DataFrame): DataFrame containing saved distances data.
+    - n (int): Number of offices to select.
+    - verbose (bool, optional): Whether to print verbose output. Default is False.
+    - ratio (float, optional): Ratio of the population to keep in each iteration. Default is 0.5.
+    - nb_it (int, optional): Number of iterations without improvement to stop the search. Default is 1000.
+    - nb_threads (int, optional): Number of parallel threads to use. Default is 10.
+
+    Returns:
+    - best_subset (tuple): Tuple containing the total saved distance and the list of selected offices.
     """
     global global_saved_df
     global global_w_single
@@ -184,7 +270,16 @@ def p_evolutionary(saved_df, n, verbose=False, ratio=0.5, nb_it=1000, nb_threads
 
 def mip(saved_df, nb_offices, solver="cbc", verbose=False):
     """
-    MIP modelization in pyomo
+    Mixed Integer Programming model for office location optimization using Pyomo.
+
+    Parameters:
+    - saved_df (pd.DataFrame): DataFrame containing saved distances data.
+    - nb_offices (int): Number of offices to select.
+    - solver (str, optional): Solver to use for optimization. Default is "cbc".
+    - verbose (bool, optional): Whether to print verbose output. Default is False.
+
+    Returns:
+    - result (tuple): Tuple containing the total saved distance and the list of selected offices.
     """
     model = pyo.ConcreteModel()
     model.offices = range(saved_df.shape[1])

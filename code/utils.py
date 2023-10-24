@@ -13,6 +13,12 @@ def load_muni_list(cfg):
 """
 
 def parse_cfg(yml_path):
+    """
+    Parse configuration data from a YAML file.
+
+    Parameters:
+    - yml_path (str): Path to the YAML configuration file.
+    """
     with open(yml_path, "r") as yml_file:
         cfg = yaml.safe_load(yml_file)
     data_path = os.path.abspath(cfg["data_path"])

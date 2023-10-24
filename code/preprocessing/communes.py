@@ -6,9 +6,15 @@ import numpy as np
 
 def get_coord(df_persons, communes):
     """
-    get origin and destination coordinates
-    df_persons: origin_id, destination_id
-    communes: commune_id, x, y
+    Get origin and destination coordinates for persons based on given communes data.
+
+    Parameters:
+        df_persons (pandas.DataFrame): DataFrame with 'origin_id' and 'destination_id'.
+        communes (pandas.DataFrame): DataFrame with 'commune_id', 'x', and 'y' columns.
+
+    Returns:
+        pandas.DataFrame: DataFrame with 'origin_x', 'origin_y', 'destination_x', and 'destination_y'
+        columns added to df_persons.
     """
     communes = communes.drop_duplicates("commune_id")
     communes = communes[["commune_id", "x", "y"]]
@@ -22,6 +28,16 @@ def get_coord(df_persons, communes):
     return df_persons
 
 def avg_d_within(poly, nb_it):
+    """
+    Calculate the average distance between random points within a polygon.
+
+    Parameters:
+        poly (shapely.geometry.Polygon): Polygon object.
+        nb_it (int): Number of iterations to calculate the average distance.
+
+    Returns:
+        float: Average distance between random points within the polygon.
+    """
     min_x, min_y, max_x, max_y = poly.bounds
     sum = 0
     for i in range(nb_it):
@@ -35,8 +51,15 @@ def avg_d_within(poly, nb_it):
 
 def get_communes(data_path, departments=[]):
     """
-    return geo dataFrame with communes names, ids, geometry, and coordinates (x,y)
-    df_communes: nom, commune_id, geometry, x, y
+    Read and process municipality data, returning a GeoDataFrame with commune names, IDs, geometry, and coordinates.
+
+    Parameters:
+        data_path (str): Path to the directory containing the municipality shapefile.
+        departments (list): List of department codes to filter the data by (default=[]).
+
+    Returns:
+        geopandas.GeoDataFrame: GeoDataFrame with columns 'nom' (name), 'commune_id', 'geometry', 'x', 'y',
+        and 'avg_d_intra' (average intra-municipality distance) after processing.
     """
     print("Processing municipalities...")
     df_communes = gpd.read_file(data_path+"/iris/communes-20220101.shp", dtype={"insee":str})

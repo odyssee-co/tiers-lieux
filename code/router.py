@@ -7,18 +7,37 @@ import preselection
 import tqdm
 import geopandas as gpd
 
-#TODO: replace the equasim router used to calculate the time and distance matrices by the mobility referential
+#TODO: replace the eqasim router used to calculate the time and distance matrices by the mobility referential
 
 class Router:
+    """
+    A class representing a router for transportation simulations.
 
+    Attributes:
+        jar_file (str): Path to the .jar file for running transportation simulations.
+        data_path (str): Path to the directory containing input data files.
+        processed_path (str): Path to the directory where processed data will be stored.
+        matsim_conf (str): Path to the MATSim configuration file.
+    """
 
     def __init__(self, data_path, processed_path, matsim_conf):
+        """
+        Initializes a Router object with the given data paths and MATSim configuration file path.
+
+        Parameters:
+            data_path (str): Path to the directory containing input data files.
+            processed_path (str): Path to the directory where processed data will be stored.
+            matsim_conf (str): Path to the MATSim configuration file.
+        """
         self.jar_file = "equasim-java/flow/target/flow-1.2.0.jar"
         self.data_path = data_path
         self.processed_path = processed_path
         self.matsim_conf = matsim_conf
 
     def compute_request(self):
+        """
+        Compute eqasim csv request file if it doesn't already exist.
+        """
         path = f"{self.processed_path}/request.csv"
         if not os.path.isfile(path):
             print("Computing request...")
@@ -47,8 +66,14 @@ class Router:
 
     def get_routed(self):
         """
-        Call MATSim router
-        person_id;office_id;origin_x;origin_y;destination_x;destination_y
+        Call eqasim router to compute routed data based on request data.
+
+        If the routed data file does not exist, it computes the routing using MATSim.
+        The function assumes the existence of request data and specific columns in the CSV file.
+
+        Returns:
+        pandas.DataFrame: DataFrame containing routed data with columns 'origin_id', 'destination_id',
+        'car_travel_time', and 'car_distance'.
         """
         routed_path = f"{self.processed_path}/routed.csv"
         if not os.path.isfile(routed_path):
@@ -78,7 +103,14 @@ class Router:
     def get_routed_intra(self):
         """
         Add estimation of the traveled distances and times if the origin
-        municipality is the same than the destination municipality
+        municipality is the same as the destination municipality.
+
+        Computes and saves the routed data with intra-municipality distances and times if not already done.
+        Assumes the existence of routed data and specific columns in the input data files.
+
+        Returns:
+        pandas.DataFrame: DataFrame containing routed data with updated 'car_distance',
+        'car_travel_time', 'pt_distance', and 'pt_travel_time' columns.
         """
         routed_intra_path = f"{self.processed_path}/routed_intra.feather"
         if not os.path.isfile(routed_intra_path):
@@ -102,8 +134,21 @@ class Router:
     def get_saved_distance(self, isochrone, min_saved, presel_func, office_dep,
                            office_muni, vacancy_file, exclude):
         """
-        Return a dataframe containing for each employee, the time he would save working
-        in each office (0 if the saved time if negative or inferior to min_saved).
+        Calculate for each employee, the time he would save working in each office.
+
+        Parameters:
+            isochrone (int): Isochrone duration in minutes.
+            min_saved (int): Minimum saved time in minutes to consider an office.
+            presel_func (str): Preselection function name.
+            office_dep (str): Department.
+            office_muni (list): List of municipality IDs for office selection.
+            vacancy_file (str): Path to the vacancy file.
+            exclude (list): List of municipalities to be excluded from office selection.
+
+        Returns:
+            pd.DataFrame: A dataframe containing time saved by each employee for each office.
+                          Columns represent office IDs, and rows represent employee IDs.
+                          Time saved is 0 if it's negative or less than min_saved.
         """
         path_saved = f"{self.processed_path}/saved_iso{isochrone}_min{min_saved}_{presel_func}.feather"
         if os.path.exists(path_saved):

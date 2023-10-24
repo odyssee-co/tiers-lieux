@@ -8,7 +8,16 @@ import math
 
 def all(processed_path, office_dep=None, office_muni=None, exclude=[]):
     """
-    Return all municipalities minus the one in exclude.
+    Get a list of all municipalities excluding the ones specified in 'exclude'.
+
+    Parameters:
+        processed_path (str): Path to the processed data directory.
+        office_dep (list, optional): List of office department IDs to filter by. Defaults to None.
+        office_muni (list, optional): List of office municipality IDs to filter by. Defaults to None.
+        exclude (list, optional): List of municipality IDs to be excluded. Defaults to an empty list.
+
+    Returns:
+        list: A list of municipality IDs that meet the filtering criteria.
     """
     municipalities = gpd.read_file(f"{processed_path}/communes.gpkg")
     if office_dep:
@@ -18,9 +27,19 @@ def all(processed_path, office_dep=None, office_muni=None, exclude=[]):
     return list(set(municipalities.commune_id) - set(exclude))
 
 def top_50(processed_path, office_dep=None, office_muni=None, exclude=[]):
+
     """
-    Return the top 50 municipalities with the most inhabitants
-    leaving every days to go to work in another communes.
+    Get the top 50 municipalities with the highest number of inhabitants commuting
+    to work in other municipalities on a daily basis.
+
+    Parameters:
+        processed_path (str): Path to the processed data directory.
+        office_dep (list, optional): List of departments. Defaults to None.
+        office_muni (list, optional): List of municipalities. Defaults to None.
+        exclude (list, optional): List of municipality IDs to be excluded. Defaults to an empty list.
+
+    Returns:
+        list: A list of the top 50 municipality IDs with the most outbound commuters.
     """
     persons_df = pd.read_feather(processed_path+"/persons.feather")
     persons_df = persons_df[persons_df["origin_id"]
@@ -86,10 +105,19 @@ def adbscan(processed_path, office_dep=None, office_muni=None, exclude=[], eps=4
 def dbscan(processed_path, office_dep=None, office_muni=None, exclude=[], eps=4000, min_samples=500,
                     verbose=True):
     """
-    Return the top dbscan cluster centres with the most inhabitants
-    leaving every days to go to work in another communes.
-    eps: maximum distance between two samples for them to be considered as in the same neighborhood.
-    min_samples: number of samples (or total weight) in a neighborhood for a point to be considered as a core point. This includes the point itself.
+    Perform ADBSCAN clustering to preselect 50 municipalities
+
+    Parameters:
+        processed_path (str): Path to the processed data directory.
+        office_dep (list, optional): List of departments. Defaults to None.
+        office_muni (list, optional): List of municipalities. Defaults to None.
+        exclude (list, optional): List of municipality IDs to be excluded. Defaults to an empty list.
+        eps (int, optional): Maximum distance between two samples for them to be in the same neighborhood. Defaults to 4000.
+        min_samples (int, optional): Number of samples in a neighborhood for a point to be considered a core point. Defaults to 500.
+        verbose (bool, optional): If True, print verbose information. Defaults to True.
+
+    Returns:
+        list: A list of the top 50 municipality IDs
     """
     eps=int(eps)
     persons_df = pd.read_feather(processed_path+"/persons.feather")
@@ -133,7 +161,17 @@ def dbscan(processed_path, office_dep=None, office_muni=None, exclude=[], eps=40
 
 def kmeans(processed_path, office_dep=None, office_muni=None, exclude=[], verbose=True):
     """
-    Return the k-means
+    Perform K-means clustering to preselect 50 municipalities
+
+    Parameters:
+        processed_path (str): Path to the processed data directory.
+        office_dep (list, optional): List of departments. Defaults to None.
+        office_muni (list, optional): List of municipalities. Defaults to None.
+        exclude (list, optional): List of municipality IDs to be excluded. Defaults to an empty list.
+        verbose (bool, optional): If True, print verbose information. Defaults to True.
+
+    Returns:
+        list: A list of the top 50 municipality IDs with the most outbound commuters according to K-means clustering.
     """
     persons_df = pd.read_feather(processed_path+"/persons.feather")
     persons_df = persons_df[persons_df["origin_id"]
@@ -172,7 +210,18 @@ def kmeans(processed_path, office_dep=None, office_muni=None, exclude=[], verbos
 
 def kde(processed_path, office_dep=None, office_muni=None, exclude=[], verbose=True, bandwidth=15000):
     """
-    Return top_50 municipalities with highest score on a kernel density estimation
+    Perform kernel density estimation (KDE) to identify the top 50 municipalities with highest score
+
+    Parameters:
+        processed_path (str): Path to the processed data directory.
+        office_dep (list, optional): List of departments. Defaults to None.
+        office_muni (list, optional): List of municipalities. Defaults to None.
+        exclude (list, optional): List of municipality IDs to be excluded. Defaults to an empty list.
+        verbose (bool, optional): If True, print verbose information. Defaults to True.
+        bandwidth (float, optional): Bandwidth for kernel density estimation. Defaults to 15000.
+
+    Returns:
+        list: A list of the top 50 municipality IDs.
     """
     persons_df = pd.read_feather(processed_path+"/persons.feather")
     persons_df = persons_df[persons_df["origin_id"]
@@ -200,7 +249,19 @@ def kde(processed_path, office_dep=None, office_muni=None, exclude=[], verbose=T
 
 def density_centers(processed_path, office_dep=None, office_muni=None, exclude=[], verbose=True, iso=15):
     """
-    Return top_50 municipalities with highest score on a kernel density estimation
+    Identify the top 50 municipalities based on the density of outbound commuters
+    considering the zone of influence of each municipality.
+
+    Parameters:
+        processed_path (str): Path to the processed data directory.
+        office_dep (list, optional): List of departments. Defaults to None.
+        office_muni (list, optional): List of municipalities. Defaults to None.
+        exclude (list, optional): List of municipality IDs to be excluded. Defaults to an empty list.
+        verbose (bool, optional): If True, print verbose information. Defaults to True.
+        iso (int, optional): Isochrone. Defaults to 15.
+
+    Returns:
+        list: A list of the top 50 municipality IDs.
     """
     routed_path = processed_path+"/routed.csv"
     routed_df = pd.read_csv(routed_path, sep=";", dtype={"person_id":str,
