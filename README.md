@@ -5,6 +5,7 @@ This repository contains the code used for implementing the methods described in
 <p align="center">
 <img src="https://github.com/odyssee-co/tiers-lieux/blob/main/img/map_n10_iso30_min10_mip_dbscan.png" alt="Shared Office Networks for Toulouse area" width="500"/>
 </p>
+
 ## Overview
 
 Our approach involves three main stages:
