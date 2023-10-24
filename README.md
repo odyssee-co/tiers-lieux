@@ -21,6 +21,15 @@ We use French population census data provided by INSEE, specifically focusing on
 ### Parameters and Decision Model
 - **Isochrone:** Maximum travel time for an employee to consider using a coworking space.
 - **Minimum Saved Time:** Minimum time saved required for an employee to switch to a coworking space (set to 10 minutes in this implementation).
+- 
+### Preselection Algorithms
+Our method is optimized for large territories and involves evaluating a limited number of offices from a predefined selection of potential sites. To enhance efficiency, we implemented four preselection techniques:
+
+- **Top\_50:** Selects the 50 municipalities with the highest number of inhabitants commuting each day to another workplace.
+- **K-means:** Partitions observations into clusters, weighted by the commuting population.
+- **DBSCAN:** Groups neighboring points into clusters and marks points in low-density regions as outliers.
+- **KDE:** Estimates a probability density function of the commuting population, providing a heatmap of commuters' distribution across the territory.
+
 
 ### Optimization Algorithms
 1. **Integer Programming:**
@@ -35,23 +44,23 @@ We use French population census data provided by INSEE, specifically focusing on
      - Randomly selects *n* distinct municipalities, weighted by their individual performance.
      - Evaluates solutions iteratively and stops after a specified number of unsuccessful iterations.
    - **Parallel Evolutionary Algorithm:**
-     - Uses a structured stochastic approach inspired by natural selection mechanisms.
-     - Emulates Darwinian evolution: fittest individuals are allowed to reproduce and form the next generation.
-     - Uses parallel implementation with multiple threads for efficient exploration of solutions.
+     - Uses an evolutionnary algorithm to efficiently explore the solutions space.
+     - Uses parallel implementation with multiple threads.
 
 ## How to Use
 
 Follow these steps to utilize the code and replicate our research:
 
-1. **Get the Data:**
-   - Download French administrative boundaries from [data.gouv.fr](https://www.data.gouv.fr/fr/datasets/decoupage-administratif-communal-francais-issu-d-openstreetmap/). Unzip the file in `data/iris`.
-   - Obtain the professional mobility file from [INSEE](https://www.insee.fr/fr/statistiques/fichier/5395749/RP2018_mobpro_csv.zip) and unzip it in `data`.
 
-2. **Clone the Repository:**
+1. **Clone the Repository:**
    ```
    git clone git@github.com:odyssee-co/tiers-lieux.git
    cd tiers-lieux
    ```
+   
+2. **Get the Data:**
+   - Download French administrative boundaries from [data.gouv.fr](https://www.data.gouv.fr/fr/datasets/decoupage-administratif-communal-francais-issu-d-openstreetmap/). Unzip the file in `data/iris`.
+   - Obtain the professional mobility file from [INSEE](https://www.insee.fr/fr/statistiques/fichier/5395749/RP2018_mobpro_csv.zip) and unzip it in `data`.
 
 3. **Install Dependencies:**
    ```
@@ -71,6 +80,7 @@ Follow these steps to utilize the code and replicate our research:
    cd code
    python run.py --conf conf_file.yml
    ```
+   A file res.csv will be created in your processed directory, recording for each optimization the number of offices, the isochrone, the minimum distance, the preselection algorithm the optimization algorithm, the exectution time, the total saved distance and the selected municipalities 
 
 ## Citation
 
